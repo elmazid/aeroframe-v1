@@ -3362,10 +3362,23 @@ async function requestScreenWakeLock() {
       }
     }
 
-window.addEventListener('DOMContentLoaded', () => {
+function registerOfflineServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('Mode Offline Siap (Scope):', reg.scope);
+          })
+          .catch((err) => {
+            console.warn('Registrasi Service Worker gagal:', err);
+          });
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
       initHeadsetAudioElement();
       renderApp();
       armWakeLockOnFirstTouch();
+      registerOfflineServiceWorker();
     });
   </script>
 </body>
