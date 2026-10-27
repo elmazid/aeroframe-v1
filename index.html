@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#12141A" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <meta name="apple-mobile-web-app-title" content="AEROFRAME 1.0" />
   <title>AEROFRAME V1.0 — Endurance & Aesthetic Hybrid System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,16 +70,12 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      background: rgba(18, 20, 26, 0.94);
+      background: rgba(18, 20, 26, 0.96);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      /* Pecah padding secara spesifik agar Safari tidak gagal render */
-      padding-right: 14px;
-      padding-bottom: 10px;
-      padding-left: 14px;
-      /* Gunakan jaring pengaman min 54px (seukuran Dynamic Island) jika env() terbaca 0 */
-      padding-top: max(54px, calc(12px + env(safe-area-inset-top)));
+      padding: 16px 14px 10px !important;
+      padding-top: calc(16px + env(safe-area-inset-top, 0px)) !important;
     }
 
     .top-row-1 {
