@@ -66,7 +66,7 @@
     }
 
     /* TOP HEADER */
-    .top-bar {
+.top-bar {
       position: sticky;
       top: 0;
       z-index: 50;
@@ -74,7 +74,8 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      padding: 12px 14px 10px;
+      /* Padding atas didorong ke bawah poni iOS secara dinamis */
+      padding: calc(12px + env(safe-area-inset-top)) 14px 10px;
     }
 
     .top-row-1 {
