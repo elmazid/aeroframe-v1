@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aeroframe-v10-offline-v1';
+const CACHE_NAME = 'aeroframe-v10-offline-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
