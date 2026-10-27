@@ -74,8 +74,12 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      /* Padding atas didorong ke bawah poni iOS secara dinamis */
-      padding: calc(12px + env(safe-area-inset-top)) 14px 10px;
+      /* Pecah padding secara spesifik agar Safari tidak gagal render */
+      padding-right: 14px;
+      padding-bottom: 10px;
+      padding-left: 14px;
+      /* Gunakan jaring pengaman min 54px (seukuran Dynamic Island) jika env() terbaca 0 */
+      padding-top: max(54px, calc(12px + env(safe-area-inset-top)));
     }
 
     .top-row-1 {
