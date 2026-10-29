@@ -788,8 +788,8 @@
     const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const DAY_LABELS = {
       mon: { short: 'SEN', full: 'Senin', tag: 'Neck' },
-      tue: { short: 'SEL', full: 'Selasa', tag: 'Upper A' },
-      wed: { short: 'RAB', full: 'Rabu', tag: 'Lower+Z2' },
+      tue: { short: 'SEL', full: 'Selasa', tag: 'Lower' },
+      wed: { short: 'RAB', full: 'Rabu', tag: 'UpA+Z2' },
       thu: { short: 'KAM', full: 'Kamis', tag: 'DOMS/Neck' },
       fri: { short: 'JUM', full: 'Jumat', tag: 'Tempo Z3' },
       sat: { short: 'SAB', full: 'Sabtu', tag: 'Upper B' },
@@ -820,7 +820,7 @@
       tab: 'workout',
       phase: 0,
       day: getCurrentDayKey(),
-      swapTueWed: false,
+      swapTueWed: true,
       mvw: false,
       w5Deload: false,
       yellowCutSet: true,
@@ -862,7 +862,8 @@
         if (!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
         const parsed = JSON.parse(raw);
         return Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed, {
-          day: getCurrentDayKey()
+          day: getCurrentDayKey(),
+          swapTueWed: true
         });
       } catch (e) {
         return JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -944,7 +945,7 @@
       }
     }
 
-async function requestScreenWakeLock() {
+    async function requestScreenWakeLock() {
       try {
         if ('wakeLock' in navigator) {
           wakeLockSentinel = await navigator.wakeLock.request('screen');
@@ -1043,16 +1044,14 @@ async function requestScreenWakeLock() {
         navigator.vibrate([250, 100, 250, 100, 400]);
       }
     }
+
     /* =========================================================================
        3. CONTEXT-AWARE WARM-UP & COOL-DOWN DATABASE PER DAY
        ========================================================================= */
     function getEffectiveScheduleType(dayKey) {
-      if (ST.swapTueWed) {
-        if (dayKey === 'tue') return 'lower_only';
-        if (dayKey === 'wed') return 'upper_a_plus_run1';
-      }
-      if (dayKey === 'tue') return 'upper_a';
-      if (dayKey === 'wed') return 'lower_plus_run1';
+      // Permanently swapped: Tuesday = Lower, Wednesday = Upper A + Run 1
+      if (dayKey === 'tue') return 'lower_only';
+      if (dayKey === 'wed') return 'upper_a_plus_run1';
       return dayKey;
     }
 
@@ -1063,7 +1062,7 @@ async function requestScreenWakeLock() {
       const p = Number(ST.phase);
       const domsScore = Number((ST.domsLog['w' + p] && ST.domsLog['w' + p].score) ?? 2);
 
-      // Upper Body Days (Tuesday Default, Saturday, or Wednesday if Swapped)
+      // Upper Body Days (Wednesday Upper A or Saturday Upper B)
       if (schedType === 'upper_a' || schedType === ' upper_b' || dayKey === 'sat' || schedType === 'upper_a_plus_run1') {
         const firstLiftName = (dayKey === 'sat') ? 'Seated Cable Row di Sabtu' : 'Incline DB Press';
         return {
@@ -1114,7 +1113,7 @@ async function requestScreenWakeLock() {
         };
       }
 
-      // Lower Body Days (Wednesday Default or Tuesday if Swapped)
+      // Lower Body Days (Tuesday Default)
       if (schedType === 'lower_plus_run1' || schedType === 'lower_only') {
         const warmupList = [
           {
@@ -1281,7 +1280,6 @@ async function requestScreenWakeLock() {
         }
       ];
     }
-
     function getUpperAExercises(p) {
       if (p === 9) {
         return [
@@ -1435,8 +1433,25 @@ async function requestScreenWakeLock() {
           ]
         },
         {
+          id: 'ua_apu',
+          title: '4. Assisted Pull-Up Machine (Inverse Load)',
+          sets: 2,
+          reps: '8–10 (Progresi 8–12)',
+          load: 'Pin Awal: 20 – 25 kg (RIR 2)',
+          restSec: 105,
+          compound: true,
+          warning: '⚠️ INVERSE LOAD: Semakin BESAR angka pin beban bantu = semakin RINGAN angkatan! Semakin KECIL angka pin = semakin BERAT angkatan (Beban Aktual = BB User − Beban Pin).',
+          target19Dec: 'Pin 12,5–18 kg (Lulus <=10 kg)',
+          plafon: 'Tarik Vertikal & Dekompresi OHP',
+          info: '• Tujuan Fungsional: Melatih pola gerak tarik vertikal konsentrik (naik) dengan jalur terkontrol & dekompresi tulang belakang pasca-OHP, melengkapi latihan eksentrik (Negative Pull-Up) di sesi Sabtu.\n• Parameter & Tempo (2-1-2-1): 2 Set Efektif x 8–10 rep (Rentang Progresi 8–12 rep, RIR 2). Tempo: 2 detik naik, tahan 1 detik di atas, 2 detik turun terkontrol, berhenti total 1 detik di bawah. Istirahat 90–120 detik.\n• Panduan Beban Bantu (Khusus BB 53–55 kg): Awal (Start) pasang pin 20–25 kg (beban bersih ~30–35 kg / ~60% BB) -> Menengah (Intermediate) pin 12,5–18 kg (beban bersih ~37–42 kg / ~75% BB) -> Siap Lepas Alat (Graduation) pin 5–10 kg (mampu 10–12 reps bersih di <=10 kg = siap Full Bodyweight Pull-Up).\n• Progresi (Inverse Double Progression): (Fase 1) Pertahankan angka pin setiap minggu hingga tembus 2 set x 12 rep bersih (RIR 2). (Fase 2) Ketika 2x12 tercapai, TURUNKAN pin beban bantu 1 tingkat (-2,5 s.d. -5 kg), lalu kembalikan target ke 8 reps.\n• Eksekusi & Biomekanika:\n  1. Grip: Pronated/Overhand (telapak menghadap depan), lebar ~1,2x bahu.\n  2. Kunci Core & Bokong (Anti-Passive Kneeling): Jangan merilekskan perut atau melengkungkan pinggang di atas bantalan lutut. Kencangkan core & remas glutes agar tubuh kaku lurus dari bahu hingga lutut.\n  3. Inisiasi Belikat (Scapular Depression): Mulai dari lengan lurus di bawah, tarik bahu turun menjauhi telinga sebelum menekuk siku. Arahkan siku ke tulang rusuk/saku celana untuk mengaktifkan lats.\n  4. Puncak & 1-Second Dead Stop: Tarik hingga dagu melewati palang, busungkan dada atas ke palang (tahan 1 dtk). Saat turun penuh hingga tangan lurus di bawah, WAJIB berhenti diam 1 detik (jangan memantul di bantalan mesin).\n• Napas: Tarik napas dalam lewat hidung & kunci perut (bracing) saat berhenti 1 detik di bawah -> Hembuskan kuat lewat mulut saat menarik tubuh naik -> Tarik napas perlahan lewat hidung sepanjang 2 detik turun.\n• Safety & Form Check: Jangan mengangkat bahu ke telinga (shrugging) atau menarik dengan otot leher. Hentikan set jika dagu tak lagi melewati palang. Gunakan telapak tangan hanya sebagai "pengait" (hooks) dan tarik beban menggunakan siku agar lengan bawah tidak cepat lelah sebelum gerakan isolasi.',
+          metrics: [
+            { key: 'apu_kg', label: 'Pin Bantu (-kg)', def: 22.5 },
+            { key: 'apu_reps', label: 'Rep Bersih', def: 8 }
+          ]
+        },
+        {
           id: 'ua_4',
-          title: '4. High-Pulley Cable Face Pull (#1)',
+          title: '5. High-Pulley Cable Face Pull (#1)',
           sets: baseSets,
           reps: '12–15',
           load: 'Awal: 5 – 7,5 kg',
@@ -1451,7 +1466,7 @@ async function requestScreenWakeLock() {
         },
         {
           id: 'ua_5',
-          title: '5. DB Lateral Raise (#1)',
+          title: '6. DB Lateral Raise (#1)',
           sets: baseSets,
           reps: '12–15 (s.d. 20)',
           load: 'Awal: 2 x 2,5 kg',
@@ -1466,7 +1481,7 @@ async function requestScreenWakeLock() {
         },
         {
           id: 'ua_6a',
-          title: '6A. DB Hammer Curl (#1)',
+          title: '7A. DB Hammer Curl (#1)',
           sets: baseSets,
           reps: '6–10 (Set 3: 12–15 @ 2,5kg)',
           load: 'Set 1-2: 5 kg | Set 3: 2,5 kg',
@@ -1481,7 +1496,7 @@ async function requestScreenWakeLock() {
         },
         {
           id: 'ua_6b',
-          title: '6B. DB Wrist Curl (#1)',
+          title: '7B. DB Wrist Curl (#1)',
           sets: wristSets,
           reps: '15–20',
           load: 'Awal: 2 x 2,5 kg',
@@ -1810,7 +1825,8 @@ async function requestScreenWakeLock() {
       }
       return [];
     }
-  /* =========================================================================
+
+    /* =========================================================================
        5. READINESS ENGINE (7-DAY ROLLING RHR) & DOMS GATE EVALUATOR
        ========================================================================= */
     function getRollingRhrBaseline() {
@@ -1892,7 +1908,7 @@ async function requestScreenWakeLock() {
           id: 'run1',
           title: isW9
             ? '5. LARI 1: Lari Outdoor Easy Run Z2 (20 mnt) + 3x20 dtk Strides'
-            : `6. LARI 1 (Langsung Setelah Beban): Easy Run Zona 2 ${isW0 ? '(20 Menit Tanpa Strides)' : '+ 3x Strides (23 Menit)'}`,
+            : `8. LARI 1 (Langsung Setelah Beban): Easy Run Zona 2 ${isW0 ? '(20 Menit Tanpa Strides)' : '+ 3x Strides (23 Menit)'}`,
           warning: '👟 Pasang kembali SEPATU LARI berbantalan nyaman sebelum naik ke treadmill!',
           targetBadge: isW0 ? '20 Menit (Z2 Murni)' : '23 Menit (Termasuk 3x Strides)',
           hrZoneBadge: 'Zona 2: 138–152 bpm',
@@ -1912,7 +1928,7 @@ async function requestScreenWakeLock() {
           return {
             id: 'run2',
             title: '🛑 LARI 2 DIGANTI: Jalan Kaki Santai / Istirahat Proteksi (DOMS >= 6)',
-            warning: '🚨 Gerbang DOMS MERAH (Skor >= 6): Lari Tempo dibatalkan demi mencegah cedera tendon/otot! Pangkas volume Lower Rabu depan sebesar 50%.',
+            warning: '🚨 Gerbang DOMS MERAH (Skor >= 6): Lari Tempo dibatalkan demi mencegah cedera tendon/otot! Pangkas volume Lower Selasa depan sebesar 50%.',
             targetBadge: '20–25 Menit Jalan Santai',
             hrZoneBadge: 'Zona 1: <130 bpm',
             queue: [
@@ -2033,19 +2049,16 @@ async function requestScreenWakeLock() {
         ];
 
         if (isTestWeek) {
-          // Min 04:00 to Min 10:00 (6 mins) before test
           queue.push({
             label: '3A. Lari Zona 2 Pra-Tes (Menit 4 s.d. 10)',
             sec: 360,
             desc: 'Speed 5,8–6,0 km/jam stabil sebelum masuk jendela Tes 10 Menit.'
           });
-          // Min 10:00 to Min 20:00 (10 mins) @ 6.0 km/h
           queue.push({
             label: '🎯 3B. JENDELA TES SUBMAKSIMAL PACE-HR (Menit 10 s.d. 20)',
             sec: 600,
             desc: 'KUNCI SPEED TEPAT DI 6,0 KM/JAM selama 10 menit penuh! Catat rata-rata HR segmen ini di bawah.'
           });
-          // Remaining Z2 minutes after Min 20:00
           const remAfterTestMin = Math.max(5, mainZ2Min - 16);
           queue.push({
             label: `3C. Lanjutan Lari Konstan Zona 2 (${remAfterTestMin} Menit)`,
@@ -2108,9 +2121,9 @@ async function requestScreenWakeLock() {
       {
         title: '🏋️ 2. Kendali RIR 2–3, Anti-Pinch Grip, Alas Kaki & 3 Langkah Naik Beban',
         items: [
-          '• Disiplin RIR 2–3 (Tanpa Failure): Hentikan set saat masih sanggup 2–3 rep lagi dengan teknik rapi. Khusus hari Kaki (Rabu), wajib RIR 3 dan dipandu Gerbang DOMS Kamis.',
+          '• Disiplin RIR 2–3 (Tanpa Failure): Hentikan set saat masih sanggup 2–3 rep lagi dengan teknik rapi. Khusus hari Kaki (Selasa), wajib RIR 3 dan dipandu Gerbang DOMS Kamis.',
           "• Genggaman Aman Kulit (Anti-Pinch Grip): Untuk semua gerakan menarik/menenteng (Pulldown, Row, RDL, Farmer's Walk, Dead Hang), kaitkan gagang di LIPATAN PANGKAL JARI (bukan tengah bantalan telapak) agar kulit tidak terjepit. Untuk mendorong (Press), genggam penuh di pangkal telapak.",
-          '• Aturan Alas Kaki: Gunakan sepatu lari berbantalan nyaman di semua sesi lari (menghemat konsumsi oksigen 1,6–4%). Sebaliknya, WAJIB lepas sepatu lari yang empuk saat RDL, Squat, dan Lunge di hari Rabu.',
+          '• Aturan Alas Kaki: Gunakan sepatu lari berbantalan nyaman di semua sesi lari (menghemat konsumsi oksigen 1,6–4%). Sebaliknya, WAJIB lepas sepatu lari yang empuk saat RDL, Squat, dan Lunge di hari Selasa.',
           '• Protokol 3 Langkah Naik Dumbbell (+2,5 kg): (1) Penuhi batas atas rep di semua set pada beban saat ini (RIR 2). (2) Set Jembatan 2–3 sesi: Set 1–2 pakai DB baru (+2,5 kg) untuk 5–6 rep bersih, Set 3 turun ke DB lama (10–12 rep). (3) Setelah mampu >=8 rep bersih di semua set dengan DB baru, kunci penuh.'
         ]
       },
@@ -2127,7 +2140,7 @@ async function requestScreenWakeLock() {
         items: [
           '• Zona HR (HRmax 194, RHR 53): Zona 1 (124–138 bpm: Pemanasan/Pemulihan), Zona 2 (138–152 bpm: Aerobik & Mitokondria, wajib lulus Talk Test kalimat utuh), Zona 3 (152–166 bpm: Tempo/Ambang Laktat, RPE 6–7/10, kalimat 3–4 kata), Zona 4 (>166 bpm: Hanya tersentuh sekilas di akhir Strides 20 dtk).',
           '• Kontrol Interval Jumat: Karena sensor jam di pergelangan memiliki jeda (HR lag 30–60 dtk), gunakan Speed Treadmill + RPE 6–7/10 sebagai kemudi utama, dan jadikan HR 166 bpm sebagai pagar pembatas atas.',
-          '• Protokol Sesi Terlewat & MVW: Jika lewat 1 sesi, JANGAN digabung keesokan harinya (biarkan hangus & lanjut normal). Saat pekan ujian/sibuk berat, aktifkan Mode MVW (cukup Selasa Upper A + Sabtu Upper B + Ahad Long Run Z2). Jika absen >2 minggu, potong volume 30% di pekan pertama kembali.'
+          '• Protokol Sesi Terlewat & MVW: Jika lewat 1 sesi, JANGAN digabung keesokan harinya (biarkan hangus & lanjut normal). Saat pekan ujian/sibuk berat, aktifkan Mode MVW (cukup Rabu Upper A + Sabtu Upper B + Ahad Long Run Z2). Jika absen >2 minggu, potong volume 30% di pekan pertama kembali.'
         ]
       },
       {
@@ -2139,16 +2152,24 @@ async function requestScreenWakeLock() {
         ]
       }
     ];
+
     /* =========================================================================
-       8. BACKGROUND-RESILIENT FLOATING TIMER & GUIDED RUN TIMER ENGINE
+       8. BACKGROUND-RESILIENT FLOATING TIMER & GUIDED RUN TIMER ENGINE (+ 3S PREP)
        ========================================================================= */
     let ftInterval = null;
     let ftTargetEnd = 0;
     let ftLastPipSec = null;
+    let ftPrepMode = false;
+    let ftPrepEnd = 0;
+    let ftPendingSeconds = 0;
+    let ftActualLabel = '';
 
     let runTimerState = {
       active: false,
       paused: false,
+      prepMode: false,
+      prepEndTime: 0,
+      pendingRunSec: 0,
       dayKey: null,
       phase: null,
       stepIdx: 0,
@@ -2168,24 +2189,58 @@ async function requestScreenWakeLock() {
     function startFloatingTimer(seconds, label = 'Timer Istirahat') {
       unlockHeadsetAudio(false);
       if (ftInterval) clearInterval(ftInterval);
-      ftTargetEnd = Date.now() + seconds * 1000;
+
+      // 3-Second Prep Timer before actual countdown
+      ftPrepMode = true;
+      ftPrepEnd = Date.now() + 3000;
+      ftPendingSeconds = seconds;
+      ftActualLabel = label;
+      ftTargetEnd = 0;
       ftLastPipSec = null;
 
       const bar = document.getElementById('floating-timer');
       const lbl = document.getElementById('ft-label');
       if (bar) bar.classList.add('active');
-      if (lbl) lbl.textContent = label;
+      if (lbl) lbl.textContent = `⏳ Persiapan (3 dtk): ${label}`;
 
       tickFloatingTimer();
-      ftInterval = setInterval(tickFloatingTimer, 250);
+      ftInterval = setInterval(tickFloatingTimer, 200);
     }
 
     function tickFloatingTimer() {
-      const rem = Math.ceil((ftTargetEnd - Date.now()) / 1000);
       const timeEl = document.getElementById('ft-time');
+      const lblEl = document.getElementById('ft-label');
+
+      // Handle 3-Second Preparation Phase
+      if (ftPrepMode) {
+        const prepRem = Math.ceil((ftPrepEnd - Date.now()) / 1000);
+        if (prepRem > 0) {
+          if (timeEl) {
+            timeEl.style.color = 'var(--cyan)';
+            timeEl.textContent = `SIAP ${prepRem}`;
+          }
+          if (ftLastPipSec !== prepRem) {
+            ftLastPipSec = prepRem;
+            playWebAudioBeep(520, 0.08);
+          }
+          return;
+        }
+        // Transition from Prep to Actual Timer
+        ftPrepMode = false;
+        ftLastPipSec = null;
+        ftTargetEnd = Date.now() + ftPendingSeconds * 1000;
+        if (lblEl) lblEl.textContent = ftActualLabel;
+        if (timeEl) timeEl.style.color = 'var(--gold)';
+        playWebAudioBeep(880, 0.16);
+      }
+
+      const rem = Math.ceil((ftTargetEnd - Date.now()) / 1000);
 
       if (rem <= 0) {
-        if (timeEl) timeEl.textContent = '00:00';
+        if (timeEl) {
+          timeEl.style.color = 'var(--gold)';
+          timeEl.textContent = '00:00';
+        }
         clearInterval(ftInterval);
         ftInterval = null;
         triggerCompletionAlarm();
@@ -2205,6 +2260,10 @@ async function requestScreenWakeLock() {
     }
 
     function adjustTimer(deltaSec) {
+      if (ftPrepMode) {
+        ftPendingSeconds = Math.max(5, ftPendingSeconds + deltaSec);
+        return;
+      }
       if (!ftTargetEnd) return;
       ftTargetEnd += deltaSec * 1000;
       tickFloatingTimer();
@@ -2213,12 +2272,15 @@ async function requestScreenWakeLock() {
     function stopFloatingTimer() {
       if (ftInterval) clearInterval(ftInterval);
       ftInterval = null;
+      ftPrepMode = false;
       ftTargetEnd = 0;
+      const timeEl = document.getElementById('ft-time');
+      if (timeEl) timeEl.style.color = 'var(--gold)';
       const bar = document.getElementById('floating-timer');
       if (bar) bar.classList.remove('active');
     }
 
-    // GUIDED RUN TIMER CONTROLS
+    // GUIDED RUN TIMER CONTROLS (+ 3S PREP)
     function getActiveRunQueue() {
       const runObj = getRunSessionForDay(ST.day, Number(ST.phase));
       return runObj ? runObj.queue : [];
@@ -2236,7 +2298,10 @@ async function requestScreenWakeLock() {
       ) {
         runTimerState.paused = false;
         runTimerState.active = true;
-        runTimerState.targetEndTime = Date.now() + runTimerState.remainingSecOnPause * 1000;
+        runTimerState.prepMode = true;
+        runTimerState.prepEndTime = Date.now() + 3000;
+        runTimerState.pendingRunSec = runTimerState.remainingSecOnPause;
+        runTimerState.lastPipSec = null;
       } else {
         const idx = (runTimerState.dayKey === ST.day && runTimerState.phase === Number(ST.phase))
           ? runTimerState.stepIdx
@@ -2247,20 +2312,27 @@ async function requestScreenWakeLock() {
         runTimerState.stepIdx = safeIdx;
         runTimerState.active = true;
         runTimerState.paused = false;
+        runTimerState.prepMode = true;
+        runTimerState.prepEndTime = Date.now() + 3000;
+        runTimerState.pendingRunSec = queue[safeIdx].sec;
         runTimerState.lastPipSec = null;
-        runTimerState.targetEndTime = Date.now() + queue[safeIdx].sec * 1000;
       }
 
       if (runTimerState.intervalId) clearInterval(runTimerState.intervalId);
       tickGuidedRun();
-      runTimerState.intervalId = setInterval(tickGuidedRun, 250);
+      runTimerState.intervalId = setInterval(tickGuidedRun, 200);
       renderApp();
     }
 
     function pauseGuidedRun() {
       if (!runTimerState.active) return;
-      const rem = Math.max(1, Math.ceil((runTimerState.targetEndTime - Date.now()) / 1000));
-      runTimerState.remainingSecOnPause = rem;
+      if (runTimerState.prepMode) {
+        runTimerState.remainingSecOnPause = runTimerState.pendingRunSec;
+      } else {
+        const rem = Math.max(1, Math.ceil((runTimerState.targetEndTime - Date.now()) / 1000));
+        runTimerState.remainingSecOnPause = rem;
+      }
+      runTimerState.prepMode = false;
       runTimerState.paused = true;
       runTimerState.active = false;
       if (runTimerState.intervalId) clearInterval(runTimerState.intervalId);
@@ -2278,6 +2350,7 @@ async function requestScreenWakeLock() {
         return;
       }
       runTimerState.stepIdx = nextIdx;
+      runTimerState.prepMode = false;
       runTimerState.lastPipSec = null;
       runTimerState.remainingSecOnPause = queue[nextIdx].sec;
       if (runTimerState.active) {
@@ -2291,6 +2364,9 @@ async function requestScreenWakeLock() {
       runTimerState = {
         active: false,
         paused: false,
+        prepMode: false,
+        prepEndTime: 0,
+        pendingRunSec: 0,
         dayKey: ST.day,
         phase: Number(ST.phase),
         stepIdx: 0,
@@ -2307,8 +2383,25 @@ async function requestScreenWakeLock() {
       const queue = getActiveRunQueue();
       if (!queue.length) return;
 
-      const rem = Math.ceil((runTimerState.targetEndTime - Date.now()) / 1000);
       const clockEl = document.getElementById('guided-run-clock');
+
+      if (runTimerState.prepMode) {
+        const prepRem = Math.ceil((runTimerState.prepEndTime - Date.now()) / 1000);
+        if (prepRem > 0) {
+          if (clockEl) clockEl.textContent = `SIAP ${prepRem}`;
+          if (runTimerState.lastPipSec !== prepRem) {
+            runTimerState.lastPipSec = prepRem;
+            playWebAudioBeep(520, 0.08);
+          }
+          return;
+        }
+        runTimerState.prepMode = false;
+        runTimerState.lastPipSec = null;
+        runTimerState.targetEndTime = Date.now() + runTimerState.pendingRunSec * 1000;
+        playWebAudioBeep(880, 0.16);
+      }
+
+      const rem = Math.ceil((runTimerState.targetEndTime - Date.now()) / 1000);
 
       if (rem <= 3 && rem >= 1 && runTimerState.lastPipSec !== rem) {
         runTimerState.lastPipSec = rem;
@@ -2470,8 +2563,7 @@ async function requestScreenWakeLock() {
       if (ST.setsDone[`w${p}_${dayKey}_run_done`]) return true;
       return false;
     }
-
-    /* =========================================================================
+  /* =========================================================================
        10. TAB 1 RENDERER: 🏃 LATIHAN (WORKOUT VIEW)
        ========================================================================= */
     function updateHeaderReadinessPill() {
@@ -2509,11 +2601,7 @@ async function requestScreenWakeLock() {
       DAYS.forEach(k => {
         const lbl = DAY_LABELS[k];
         let tagText = lbl.tag;
-        if (ST.swapTueWed) {
-          if (k === 'tue') tagText = 'Lower';
-          if (k === 'wed') tagText = 'UpA+Z2';
-        }
-        const isCoreMvw = (k === 'tue' || k === 'sat' || k === 'sun');
+        const isCoreMvw = (k === 'wed' || k === 'sat' || k === 'sun');
         if (ST.mvw && !isCoreMvw) tagText = 'Opsional';
 
         const activeCls = (k === d) ? 'active' : '';
@@ -2586,14 +2674,9 @@ async function requestScreenWakeLock() {
             </div>
           ` : ''}
 
-          <!-- Structural & Mode Switches -->
-          <div class="toggle-row" onclick="toggleStateFlag('swapTueWed')">
-            <span>🔄 Tukar Permanen Selasa ↔ Rabu (Jarak Pemulihan Kaki 72 Jam)</span>
-            <div class="switch-pill ${ST.swapTueWed ? 'on' : ''}"></div>
-          </div>
-
+          <!-- Mode Switches -->
           <div class="toggle-row" onclick="toggleStateFlag('mvw')">
-            <span>🛡️ Mode MVW / Pekan Ujian (Inti: Selasa, Sabtu & Ahad)</span>
+            <span>🛡️ Mode MVW / Pekan Ujian (Inti: Rabu, Sabtu & Ahad)</span>
             <div class="switch-pill ${ST.mvw ? 'on' : ''}"></div>
           </div>
 
@@ -2608,7 +2691,7 @@ async function requestScreenWakeLock() {
 
       // MVW Status Banner
       if (ST.mvw) {
-        const isCore = (d === 'tue' || d === 'sat' || d === 'sun');
+        const isCore = (d === 'wed' || d === 'sat' || d === 'sun');
         html += `
           <div class="card ${isCore ? 'card-gold' : ''}" style="padding:10px 12px;">
             <span class="badge-pill ${isCore ? 'badge-gold' : 'badge-cyan'}">
@@ -2633,7 +2716,7 @@ async function requestScreenWakeLock() {
             <div class="card-header">
               <div>
                 <div class="card-title">🦵 Gerbang DOMS Kamis & Kesiapan Lari Jumat</div>
-                <div style="font-size:11px; color:var(--muted);">Mengatur keamanan sesi Tempo Jumat & progresi set Kaki Rabu depan</div>
+                <div style="font-size:11px; color:var(--muted);">Mengatur keamanan sesi Tempo Jumat & progresi set Kaki Selasa depan</div>
               </div>
               <span class="badge-pill ${doms.gate === 'green' ? 'badge-green' : (doms.gate === 'yellow' ? 'badge-ora' : 'badge-red')}">${domsBadge}</span>
             </div>
@@ -2653,8 +2736,8 @@ async function requestScreenWakeLock() {
               ${doms.gate === 'green'
                 ? '✅ <b>Status LOLOS:</b> Lari Jumat Tempo Z3 normal; progresi set Lower W3+ diizinkan.'
                 : (doms.gate === 'yellow'
-                    ? '⚠️ <b>Status MODIFIKASI:</b> Lari Jumat otomatis diubah ke <b>Easy Run Zona 2 (25–30 mnt)</b>; kurangi 1 set RDL & Calf Raise pada Rabu pekan depan.'
-                    : '🛑 <b>Status PROTEKSI:</b> Jumat diganti <b>Jalan Kaki Santai / Istirahat</b>; pangkas volume Lower Rabu depan sebesar 50%.')}
+                    ? '⚠️ <b>Status MODIFIKASI:</b> Lari Jumat otomatis diubah ke <b>Easy Run Zona 2 (25–30 mnt)</b>; kurangi 1 set RDL & Calf Raise pada Selasa pekan depan.'
+                    : '🛑 <b>Status PROTEKSI:</b> Jumat diganti <b>Jalan Kaki Santai / Istirahat</b>; pangkas volume Lower Selasa depan sebesar 50%.')}
             </div>
           </div>
         `;
@@ -2790,11 +2873,13 @@ async function requestScreenWakeLock() {
         const curStepIdx = isCurrentRun ? runTimerState.stepIdx : 0;
         const curStep = runSession.queue[curStepIdx] || runSession.queue[0];
 
-        const initClockSec = isCurrentRun
+        const initClockText = isCurrentRun
           ? (runTimerState.active
-              ? Math.max(0, Math.ceil((runTimerState.targetEndTime - Date.now()) / 1000))
-              : (runTimerState.paused ? runTimerState.remainingSecOnPause : curStep.sec))
-          : curStep.sec;
+              ? (runTimerState.prepMode
+                  ? `SIAP ${Math.max(1, Math.ceil((runTimerState.prepEndTime - Date.now()) / 1000))}`
+                  : formatMMSS(Math.max(0, Math.ceil((runTimerState.targetEndTime - Date.now()) / 1000))))
+              : (runTimerState.paused ? formatMMSS(runTimerState.remainingSecOnPause) : formatMMSS(curStep.sec)))
+          : formatMMSS(curStep.sec);
 
         html += `
           <div class="section-label">
@@ -2822,7 +2907,7 @@ async function requestScreenWakeLock() {
                 ${curStep.desc}
               </div>
 
-              <div id="guided-run-clock" class="run-clock">${formatMMSS(initClockSec)}</div>
+              <div id="guided-run-clock" class="run-clock">${initClockText}</div>
 
               <div class="action-row" style="justify-content:center;">
                 <button class="btn" onclick="skipGuidedRunStep(-1)">⏮️ Prev</button>
@@ -2838,7 +2923,7 @@ async function requestScreenWakeLock() {
               <div class="run-step-list">
                 ${runSession.queue.map((st, idx) => `
                   <div class="run-step-item ${idx === curStepIdx ? 'current' : (idx < curStepIdx ? 'done' : '')}">
-                    <span>${idx + 1}.${st.label}</span>
+                    <span>${idx + 1}. ${st.label}</span>
                     <b>${formatMMSS(st.sec)}</b>
                   </div>
                 `).join('')}
@@ -3191,6 +3276,11 @@ async function requestScreenWakeLock() {
                   <td>2 x 7,5 kg (3x8-10)</td>
                 </tr>
                 <tr>
+                  <td><b>Assisted Pull-Up (Inverse)</b></td>
+                  <td>Pin -${getMetricVal('apu_kg', 22.5)} kg × ${getMetricVal('apu_reps', 8)}</td>
+                  <td>Pin 12,5–18 kg (Lulus <=10 kg)</td>
+                </tr>
+                <tr>
                   <td><b>Seated Cable Row (2s)</b></td>
                   <td>${getMetricVal('scr_kg', 18)} kg × ${getMetricVal('scr_reps', 10)}</td>
                   <td>25 – 27 kg (3x10-12)</td>
@@ -3257,7 +3347,9 @@ async function requestScreenWakeLock() {
       }
       try {
         const parsed = JSON.parse(box.value.trim());
-        ST = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed);
+        ST = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed, {
+          swapTueWed: true
+        });
         saveState();
         renderApp();
         alert('✅ Data JSON berhasil dipulihkan!');
@@ -3363,7 +3455,7 @@ async function requestScreenWakeLock() {
       }
     }
 
-function registerOfflineServiceWorker() {
+    function registerOfflineServiceWorker() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
           .then((reg) => {
