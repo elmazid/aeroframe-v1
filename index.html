@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#12141A" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <meta name="apple-mobile-web-app-title" content="AEROFRAME 1.0" />
+    <meta name="apple-mobile-web-app-title" content="AEROFRAME 1.2" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="./manifest.json" />
-  <title>AEROFRAME V1.0 — Endurance & Aesthetic Hybrid System</title>
+  <title>AEROFRAME V1.2 — Endurance & Aesthetic Hybrid System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -798,8 +798,8 @@
     <!-- Sticky Header -->
     <header class="top-bar">
       <div class="top-row-1">
-        <div>
-          <div class="brand-title">⚡ AEROFRAME V1.0</div>
+                <div>
+          <div class="brand-title">⚡ AEROFRAME V1.2</div>
           <span class="brand-sub">Endurance & Aesthetic Hybrid • 53→55 kg</span>
         </div>
         <button id="btn-audio-unlock" class="btn-audio-test" onclick="unlockHeadsetAudio(true)">
@@ -2071,8 +2071,10 @@
             { key: 'run1_min', label: 'Durasi (mnt)', def: isW0 ? 20 : 23 },
             { key: 'run1_km', label: 'Jarak (km)', def: '' },
             { key: 'run1_pace', label: 'Pace (menit/km)', def: '10:43', isText: true, placeholder: 'mm:ss (cth 10:43)' },
+            { key: 'run1_best_pace', label: 'Pace Tercepat (/km)', def: '', isText: true, placeholder: 'mm:ss (cth 7:30)' },
             { key: 'run1_hr', label: 'Avg HR (bpm)', def: '' },
-            { key: 'run1_max', label: 'Max HR (bpm)', def: '' }
+            { key: 'run1_max', label: 'Max HR (bpm)', def: '' },
+            { key: 'run1_rpe', label: 'RPE (1-10)', def: 4.5 }
           ]
         };
       }
@@ -2093,6 +2095,7 @@
               { key: 'run2_min', label: 'Total (mnt)', def: 20 },
               { key: 'run2_km', label: 'Jarak (km)', def: '' },
               { key: 'run2_pace', label: 'Pace (menit/km)', def: '13:20', isText: true, placeholder: 'mm:ss (cth 13:20)' },
+              { key: 'run2_best_pace', label: 'Pace Tercepat (/km)', def: '', isText: true, placeholder: 'mm:ss' },
               { key: 'run2_hr', label: 'Avg HR (bpm)', def: '' },
               { key: 'run2_max', label: 'Max HR (bpm)', def: '' },
               { key: 'run2_rpe', label: 'RPE (1-10)', def: 3.0 }
@@ -2117,6 +2120,7 @@
               { key: 'run2_min', label: 'Total (mnt)', def: 25 },
               { key: 'run2_km', label: 'Jarak (km)', def: '' },
               { key: 'run2_pace', label: 'Pace (menit/km)', def: '10:31', isText: true, placeholder: 'mm:ss (cth 10:31)' },
+              { key: 'run2_best_pace', label: 'Pace Tercepat (/km)', def: '', isText: true, placeholder: 'mm:ss' },
               { key: 'run2_hr', label: 'Avg HR (bpm)', def: '' },
               { key: 'run2_max', label: 'Max HR (bpm)', def: '' },
               { key: 'run2_rpe', label: 'RPE (1-10)', def: 5.0 }
@@ -2192,6 +2196,7 @@
             { key: 'run2_min', label: 'Total (mnt)', def: 30 },
             { key: 'run2_km', label: 'Jarak (km)', def: '' },
             { key: 'run2_pace', label: 'Pace (menit/km)', def: '8:57', isText: true, placeholder: 'mm:ss (cth 8:57)' },
+            { key: 'run2_best_pace', label: 'Pace Tercepat (/km)', def: '', isText: true, placeholder: 'mm:ss (cth 8:10)' },
             { key: 'run2_hr', label: 'Avg HR Z3 (bpm)', def: '' },
             { key: 'run2_max', label: 'Max HR (bpm)', def: '' },
             { key: 'run2_rpe', label: 'RPE (1-10)', def: 6.5 }
@@ -2244,8 +2249,10 @@
           { key: 'run3_min', label: 'Durasi (mnt)', def: totalMin },
           { key: 'run3_km', label: 'Jarak (km)', def: '' },
           { key: 'run3_pace', label: 'Pace (menit/km)', def: '10:20', isText: true, placeholder: 'mm:ss (cth 10:20)' },
+          { key: 'run3_best_pace', label: 'Pace Tercepat (/km)', def: '', isText: true, placeholder: 'mm:ss (cth 9:30)' },
           { key: 'run3_hr', label: 'Avg HR Z2 (bpm)', def: '' },
-          { key: 'run3_max', label: 'Max HR (bpm)', def: '' }
+          { key: 'run3_max', label: 'Max HR (bpm)', def: '' },
+          { key: 'run3_rpe', label: 'RPE (1-10)', def: 5.0 }
         ];
         if (isTestWeek) {
           metrics.push({ key: 'test_hr_60', label: '🎯 HR Tes 6,0 km/j', def: '' });
@@ -2746,15 +2753,16 @@
       if (el) el.classList.toggle('open');
     }
 
-    function updateSwimField(field, val) {
+        function updateSwimField(field, val) {
       const key = `w${ST.phase}_${ST.day}`;
       if (!ST.swimDone[key]) {
-        ST.swimDone[key] = { dur: '20', style: 'Dada / Punggung Santai', done: false };
+        ST.swimDone[key] = { dur: '20', dist: '', laps: '1', style: 'Dada / Punggung Santai', done: false };
       }
       ST.swimDone[key][field] = val;
       saveState();
       if (field === 'done') renderApp();
     }
+
 
     function isDayCompleted(p, dayKey) {
       const exList = (function() {
@@ -3240,9 +3248,9 @@
         `;
       }
 
-      // 8. OPTIONAL SWIM CARD (PEMULIHAN AKTIF / NON-RED DAY)
+      // 8. OPTIONAL SWIM CARD (DURASI, JARAK, LAPS & GAYA)
       const swimKey = `w${p}_${d}`;
-      const swimRec = ST.swimDone[swimKey] || { dur: '20', style: 'Dada / Punggung Santai', done: false };
+      const swimRec = ST.swimDone[swimKey] || { dur: '20', dist: '', laps: '1', style: 'Dada / Punggung Santai', done: false };
       html += `
         <button class="acc-header" onclick="toggleAccordion('acc-swim')">
           <span>🏊 Sesi Renang Opsional (Pemulihan Aktif & Kapasitas Paru)</span>
@@ -3258,11 +3266,19 @@
             <div class="grid-2" style="margin-bottom:8px;">
               <div class="field-box">
                 <label>Durasi Renang (mnt)</label>
-                <input type="number" value="${swimRec.dur}" onchange="updateSwimField('dur', this.value)" />
+                <input type="number" placeholder="20" value="${swimRec.dur || ''}" onchange="updateSwimField('dur', this.value)" />
+              </div>
+              <div class="field-box">
+                <label>Jarak (meter)</label>
+                <input type="number" step="25" placeholder="cth: 250" value="${swimRec.dist || ''}" onchange="updateSwimField('dist', this.value)" />
+              </div>
+              <div class="field-box">
+                <label>Laps (Putaran)</label>
+                <input type="number" placeholder="1" value="${swimRec.laps !== undefined ? swimRec.laps : '1'}" onchange="updateSwimField('laps', this.value)" />
               </div>
               <div class="field-box">
                 <label>Gaya / Fokus</label>
-                <input type="text" value="${swimRec.style}" onchange="updateSwimField('style', this.value)" />
+                <input type="text" placeholder="Dada / Bebas" value="${swimRec.style || ''}" onchange="updateSwimField('style', this.value)" />
               </div>
             </div>
             <button class="set-btn ${swimRec.done ? 'completed' : ''}" style="width:100%;"
