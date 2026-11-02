@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#12141A" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="AEROFRAME 1.2" />
+  <meta name="apple-mobile-web-app-title" content="AEROFRAME 2.0" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="./manifest.json" />
-  <title>AEROFRAME V1.2 — Endurance & Aesthetic Hybrid System</title>
+  <title>AEROFRAME V2.0 — Endurance & Aesthetic Hybrid System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -488,6 +488,11 @@
       transition: all 0.15s ease;
     }
 
+    .hevy-set-row.warmup-row {
+      background: rgba(212, 175, 55, 0.06);
+      border-color: rgba(212, 175, 55, 0.35);
+    }
+
     .hevy-set-row.done {
       background: rgba(16, 185, 129, 0.08);
       border-color: rgba(16, 185, 129, 0.4);
@@ -496,7 +501,19 @@
     .hevy-set-row .set-btn {
       min-width: 0;
       padding: 7px 6px;
-      font-size: 13.5px;
+      font-size: 13px;
+    }
+
+    .hevy-warmup-note {
+      grid-column: 1 / -1;
+      font-size: 11px;
+      color: #FDE68A;
+      background: rgba(245, 158, 11, 0.1);
+      border-top: 1px dashed rgba(212, 175, 55, 0.3);
+      padding: 5px 7px;
+      border-radius: 5px;
+      margin-top: 2px;
+      line-height: 1.35;
     }
 
     .hevy-input-box {
@@ -798,8 +815,8 @@
     <!-- Sticky Header -->
     <header class="top-bar">
       <div class="top-row-1">
-                <div>
-          <div class="brand-title">⚡ AEROFRAME V1.2</div>
+        <div>
+          <div class="brand-title">⚡ AEROFRAME V2.0</div>
           <span class="brand-sub">Endurance & Aesthetic Hybrid • 53→55 kg</span>
         </div>
         <button id="btn-audio-unlock" class="btn-audio-test" onclick="unlockHeadsetAudio(true)">
@@ -868,8 +885,8 @@
     const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const DAY_LABELS = {
       mon: { short: 'SEN', full: 'Senin', tag: 'Neck' },
-      tue: { short: 'SEL', full: 'Selasa', tag: 'Lower' },
-      wed: { short: 'RAB', full: 'Rabu', tag: 'UpA+Z2' },
+      tue: { short: 'SEL', full: 'Selasa', tag: 'Low+Z2' },
+      wed: { short: 'RAB', full: 'Rabu', tag: 'Upper A' },
       thu: { short: 'KAM', full: 'Kamis', tag: 'DOMS/Neck' },
       fri: { short: 'JUM', full: 'Jumat', tag: 'Tempo Z3' },
       sat: { short: 'SAB', full: 'Sabtu', tag: 'Upper B' },
@@ -900,16 +917,16 @@
       tab: 'workout',
       phase: 0,
       day: getCurrentDayKey(),
-      swapTueWed: true,
+      swapTueWed: false,
       mvw: false,
       w5Deload: false,
       yellowCutSet: true,
       audioUnlocked: false,
       readinessLog: {},   // key: `w${phase}_${day}` -> { rhr, sleep, feel, status }
       domsLog: {},        // key: `w${phase}` -> { score: 2, hrDrift: false }
-      setsDone: {},       // key: `w${phase}_${day}_${exId}_s${idx}` -> boolean
-      metrics: {},        // key: `w${phase}_${metricKey}_s${idx}` (per-set) or run metric
-      swimDone: {},       // key: `w${phase}_${day}` -> { dur, style, done }
+      setsDone: {},       // key: `w${phase}_${day}_${exId}_s${idx}` or `_sw0` -> boolean
+      metrics: {},        // key: `w${phase}_${metricKey}_s${idx}` or `_sw0` or run metric
+      swimDone: {},       // key: `w${phase}_${day}` -> { dur, dist, laps, style, done }
       paceHrTest: {
         w0: { hr60: '', spd145: '', vo2: '41' },
         w4: { hr60: '', spd145: '', vo2: '' },
@@ -954,7 +971,7 @@
       if (!parsedObj || typeof parsedObj !== 'object') return base;
 
       const merged = Object.assign({}, base, parsedObj, {
-        swapTueWed: true
+        swapTueWed: false
       });
 
       merged.readinessLog = Object.assign({}, base.readinessLog, parsedObj.readinessLog || {});
@@ -984,8 +1001,8 @@
           return;
         }
 
-        // Skip keys that are already per-set (ending in _s0, _s1, etc.) or run metrics
-        if (/_s\d+$/.test(k) || /^w\d+_(run[123]_|test_hr_60)/.test(k)) {
+        // Skip keys that are already per-set (_s0, _s1, etc.), Set 0 warmup (_sw0), or run metrics
+        if (/_(s\d+|sw0)$/.test(k) || /^w\d+_(run[123]_|test_hr_60)/.test(k)) {
           return;
         }
 
@@ -1201,9 +1218,9 @@
        3. CONTEXT-AWARE WARM-UP & COOL-DOWN DATABASE PER DAY
        ========================================================================= */
     function getEffectiveScheduleType(dayKey) {
-      // Permanently swapped: Tuesday = Lower, Wednesday = Upper A + Run 1
-      if (dayKey === 'tue') return 'lower_only';
-      if (dayKey === 'wed') return 'upper_a_plus_run1';
+      // V2.0: Selasa = Lower + Run 1 (Easy Run Z2 + Strides), Rabu = Upper A Murni
+      if (dayKey === 'tue') return 'lower_plus_run1';
+      if (dayKey === 'wed') return 'upper_a';
       return dayKey;
     }
 
@@ -1214,31 +1231,32 @@
       const p = Number(ST.phase);
       const domsScore = Number((ST.domsLog['w' + p] && ST.domsLog['w' + p].score) ?? 2);
 
+      const multiDirWarmup = [
+        {
+          title: 'Tahap 1 — Thermal Raise: Jalan Cepat Treadmill',
+          badge: '2 mnt',
+          timerSec: 120,
+          info: 'Jalan cepat santai di atas treadmill pada Speed 4,5 – 5,0 km/jam untuk menaikkan suhu otot & melancarkan aliran darah.'
+        },
+        {
+          title: 'Tahap 2 — Mobilitas Sendi Dinamis Multi-Arah',
+          badge: '30 dtk/gerakan',
+          timerSec: 30,
+          info: '• Putaran Bahu & Dada (Arm Circles & Chest Hugs): 10x putar bahu ke depan, 10x ke belakang + 10x buka-tutup rentangan lengan di depan dada.\n• Rotasi Torso (Torso Twists): 10x memutar badan ke kiri-kanan terkontrol.\n• Ayunan Kaki Depan-Belakang (Front-to-Back Leg Swings): Pegangan tiang, ayunkan 1 kaki lurus depan-belakang 10x/kaki (hamstring & hip flexor).\n• Ayunan Kaki Menyamping (Side-to-Side Leg Swings): Pegangan tiang, ayunkan 1 kaki menyilang ke kiri & membuka ke kanan di depan tubuh 8x/kaki (kapsul panggul, gluteus medius & paha dalam).\n• Pompa Betis & Engkel Dinamis (Dynamic Calf-Ankle Rockers): Menghadap tiang, 10x berjinjit naik-turun dipadukan mendorong lutut sedikit maju melewati ujung jari kaki saat tumit menapak (memanaskan tendon Achilles & membuka sudut dorsiflexion engkel).'
+        },
+        {
+          title: "Tahap 3A — Eksekusi 'Set 0' Di Tempat (In-Place Potentiation)",
+          badge: 'Langsung di Alat',
+          timerSec: 0,
+          info: 'Pemanasan spesifik dilakukan langsung pada gerakan kompaun utama tanpa perlu bolak-balik menukar dumbbell di rak. Wajib centang baris [Set 0] di dalam kartu gerakan di bawah.'
+        }
+      ];
+
       // Upper Body Days (Wednesday Upper A or Saturday Upper B)
-      if (schedType === 'upper_a' || schedType === ' upper_b' || dayKey === 'sat' || schedType === 'upper_a_plus_run1') {
-        const firstLiftName = (dayKey === 'sat') ? 'Seated Cable Row di Sabtu' : 'Incline DB Press';
+      if (schedType === 'upper_a' || schedType === 'upper_b' || dayKey === 'sat' || schedType === 'upper_a_plus_run1') {
         return {
-          warmupTitle: '🔥 Pemanasan Dinamis Upper (4–5 Menit)',
-          warmup: [
-            {
-              title: '1. Thermal Raise: Jalan Cepat Treadmill',
-              badge: '2 mnt',
-              timerSec: 120,
-              info: 'Speed 4,5 – 5,0 km/jam untuk menaikkan suhu otot & melancarkan aliran darah.'
-            },
-            {
-              title: '2. Mobilitas Sendi Upper: Arm Circles, Chest Hugs & Torso Twists',
-              badge: '30 dtk/gerakan',
-              timerSec: 30,
-              info: '10x putar bahu ke depan, 10x ke belakang, 10x buka-tutup rentangan lengan di depan dada, & 10x putar torso kiri-kanan (Gunakan timer 30 dtk per gerakan).'
-            },
-            {
-              title: '3. Set Pemanasan Spesifik (Warm-Up Set)',
-              badge: '1 set x 8-10 rep',
-              timerSec: 0,
-              info: `Gunakan ~50% beban kerja pada gerakan pertama (${firstLiftName}) sebelum masuk Set Kerja 1.`
-            }
-          ],
+          warmupTitle: '🔥 Pemanasan Dinamis Multi-Arah (4,5–5 Menit)',
+          warmup: multiDirWarmup,
           cooldownTitle: schedType === 'upper_a_plus_run1'
             ? '❄️ Pendinginan Upper & Lari 1 (3 Menit)'
             : '❄️ Pendinginan Upper (3 Menit)',
@@ -1265,42 +1283,23 @@
         };
       }
 
-      // Lower Body Days (Tuesday Default)
+      // Lower Body + Run 1 Day (Tuesday V2.0)
       if (schedType === 'lower_plus_run1' || schedType === 'lower_only') {
-        const warmupList = [
-          {
-            title: '1. Thermal Raise: Jalan Cepat Treadmill',
-            badge: '2 mnt',
-            timerSec: 120,
-            info: 'Speed 4,5 – 5,0 km/jam.'
-          },
-          {
-            title: '2. Mobilitas Sendi Lower: Torso Twists & Leg Swings',
-            badge: '30 dtk/gerakan',
-            timerSec: 30,
-            info: '10x putar torso kiri-kanan + berpegangan pada tiang, ayunkan 1 kaki lurus ke depan-belakang 10x per kaki (Timer 30 dtk per bagian).'
-          },
-          {
-            title: '3. Set Pemanasan Spesifik RDL',
-            badge: '1 set x 8 rep',
-            timerSec: 0,
-            info: 'Gunakan ~50% beban kerja (lepas sepatu lari!).'
-          }
-        ];
+        const lowerWarmupList = multiDirWarmup.slice();
 
-        // Render Ankle Pogo Hops ONLY on W4-W8 if DOMS Gate <= 3
+        // Render Tahap 3B Ankle Pogo Hops ONLY on Tuesday Lower W4-W8 if DOMS Gate <= 3
         if (p >= 4 && p <= 8 && domsScore <= 3) {
-          warmupList.push({
-            title: '4. Ankle Pogo Hops (Pliometrik Running Economy)',
+          lowerWarmupList.push({
+            title: 'Tahap 3B — Ankle Pogo Hops (Pliometrik Running Economy)',
             badge: '2 set x 10 pantulan',
             timerSec: 30,
-            info: 'Berdiri tegak kaki rapat, tangan di pinggang, lutut hampir lurus. Lompat kecil cepat & membal murni dari pantulan pergelangan kaki/ujung telapak (kontak lantai sesingkat mungkin). Istirahat 30 detik antar-set.'
+            info: 'Berdiri tegak kaki rapat, tangan di pinggang, lutut hampir lurus. Lompat kecil cepat & membal murni menggunakan pantulan ujung telapak kaki/engkel sebanyak 2 set x 10 pantulan (Rest: 30 detik).'
           });
         }
 
         return {
-          warmupTitle: '🔥 Pemanasan Dinamis Lower (4–5 Menit)',
-          warmup: warmupList,
+          warmupTitle: '🔥 Pemanasan Dinamis Multi-Arah (4,5–5 Menit)',
+          warmup: lowerWarmupList,
           cooldownTitle: schedType === 'lower_plus_run1'
             ? '❄️ Pendinginan Lower & Lari (3 Menit — Dilakukan Setelah Lari 1)'
             : '❄️ Pendinginan Lower (3 Menit)',
@@ -1333,10 +1332,10 @@
           warmupTitle: '🔥 Mobilitas Pra-Lari (Sebelum Naik Treadmill / Outdoor)',
           warmup: [
             {
-              title: '1. Torso Twists & Front-to-Back Leg Swings',
+              title: '1. Mobilitas Sendi Dinamis Multi-Arah (Torso, Leg Swings & Calf-Ankle Rockers)',
               badge: '30 dtk/gerakan',
               timerSec: 30,
-              info: '10x putar torso kiri-kanan + 10x ayunan kaki depan-belakang per kaki (Timer 30 dtk per gerakan. Pemanasan jalan cepat sudah terintegrasi di awal Guided Run Timer).'
+              info: '• Rotasi Torso (Torso Twists): 10x memutar badan ke kiri-kanan terkontrol.\n• Ayunan Kaki Depan-Belakang (Front-to-Back Leg Swings): Pegangan tiang, 10x/kaki (hamstring & hip flexor).\n• Ayunan Kaki Menyamping (Side-to-Side Leg Swings): Pegangan tiang, ayunkan menyilang kiri-kanan 8x/kaki (kapsul panggul & gluteus medius).\n• Pompa Betis & Engkel Dinamis (Dynamic Calf-Ankle Rockers): Menghadap tiang, 10x berjinjit naik-turun dipadukan mendorong lutut sedikit maju melewati ujung jari kaki saat tumit menapak.'
             }
           ],
           cooldownTitle: '❄️ Pendinginan Pasca-Lari (Setelah Selesai Lari)',
@@ -1429,6 +1428,54 @@
           plafon: 'Panggul Stabil Saat Lari',
           info: 'Bertumpu pada satu siku bawah dan sisi kaki (atau lutut ditekuk), angkat pinggul hingga tubuh membentuk garis lurus menyamping.',
           metrics: []
+        },
+        {
+          id: 'neck_6',
+          title: '6. Banded Ankle Inversion (Putar Dalam)',
+          sets: 2,
+          reps: '12–15 rep/kaki',
+          load: 'Karet Merah (~5-7 kg, RIR 3-4)',
+          restSec: 30,
+          activeTimerSec: 35,
+          target19Dec: 'Tibialis Posterior Kuat',
+          plafon: 'Penyangga Lengkung Kaki & Anti-Shin Splints',
+          info: '• Setup Karet Merah (15–35 lbs): Duduk selonjor di lantai, kaitkan karet pada kaki meja/tiang (atau ditahan telapak kaki sebelahnya) dengan jarak agak kendur (~5–7 kg, RIR 3–4). Kunci tempurung lutut tetap menghadap ke atas agar paha tidak ikut berputar.\n• Eksekusi: Kaitkan karet di sisi dalam telapak kaki depan, putar telapak kaki mengarah ke dalam melawan tarikan karet (tahan 1 detik di puncak, kembali perlahan 2 detik). Menguatkan tibialis posterior sebagai penyangga medial arch dan pelindung utama shin splints.',
+          metrics: [
+            { key: 'ank_inv_kg', label: 'Tarikan (~kg)', def: 6 },
+            { key: 'ank_inv_reps', label: 'Rep/kaki', def: 15 }
+          ]
+        },
+        {
+          id: 'neck_7',
+          title: '7. Banded Ankle Eversion (Putar Luar)',
+          sets: 2,
+          reps: '12–15 rep/kaki',
+          load: 'Karet Merah (~5-7 kg, RIR 3-4)',
+          restSec: 30,
+          activeTimerSec: 35,
+          target19Dec: 'Peroneals Stabil',
+          plafon: 'Sabuk Anti-Keseleo (Ankle Sprain)',
+          info: '• Setup: Duduk selonjor, tempurung lutut dikunci menghadap atas.\n• Eksekusi: Kaitkan karet di sisi luar telapak kaki depan, sapukan telapak kaki membuka ke arah luar menjauhi kaki sebelahnya (tahan 1 detik di puncak, kembali perlahan 2 detik). Menguatkan otot peroneals (fibularis longus & brevis) di samping betis sebagai sabuk pengaman anti-keseleo.',
+          metrics: [
+            { key: 'ank_ev_kg', label: 'Tarikan (~kg)', def: 6 },
+            { key: 'ank_ev_reps', label: 'Rep/kaki', def: 15 }
+          ]
+        },
+        {
+          id: 'neck_8',
+          title: '8. Banded Ankle Dorsiflexion (Tarik Atas)',
+          sets: 2,
+          reps: '12–15 rep/kaki',
+          load: 'Karet Merah (~5-7 kg, RIR 3-4)',
+          restSec: 30,
+          activeTimerSec: 35,
+          target19Dec: 'Tibialis Anterior Tahan',
+          plafon: 'Peredam Benturan & Ayunan Kaki Gesit',
+          info: '• Setup: Pasang karet menarik dari arah depan punggung kaki.\n• Eksekusi: Tarik punggung dan jari kaki ke atas mendekati tulang kering (tahan 1 detik di puncak, ulur perlahan 2 detik). Menguatkan tibialis anterior di depan tulang kering untuk meredam benturan pendaratan dan menjaga ayunan kaki tetap gesit.\n• Catatan: Gerakan ke-4 (plantarflexion/jinjit) tidak dimasukkan karena sudah diwakili secara jauh lebih optimal oleh Standing Calf Raise & Ankle Pogo Hops di sesi Lower Body.',
+          metrics: [
+            { key: 'ank_df_kg', label: 'Tarikan (~kg)', def: 6 },
+            { key: 'ank_df_reps', label: 'Rep/kaki', def: 15 }
+          ]
         }
       ];
     }
@@ -1550,6 +1597,12 @@
           target19Dec: '2 x 7,5 kg (3x8-10)',
           plafon: 'Bonus: 2 x 10 kg',
           info: '• Napas: Tarik saat DB turun ke samping dada atas (tempo 2 dtk), buang saat mendorong naik.\n• Fokus: Dada atas (clavicular pectoralis) & bahu depan agar badan tebal/berisi.\n• Setup: Kemiringan bangku 30° (1–2 takik dari datar), sudut siku 45°.\n• Progresi: Tembus 3x12 rep -> Set Jembatan ke 7,5 kg (Set 1-2: 7,5 kg x 5-6 rep, Set 3: 5 kg).',
+          warmupSet: {
+            defKg: 0,
+            defReps: 6,
+            restSec: 40,
+            note: 'Set 0 (Warm-Up): Bawa sepasang DB kerja ke dekat bangku, lakukan 1 set x 6 rep Incline Push-Up bertumpu di pinggir bangku incline. Rest 30–45 dtk lalu mulai Set 1.'
+          },
           metrics: [
             { key: 'idb_kg', label: 'Beban DB (kg)', def: 5 },
             { key: 'idb_reps', label: 'Repetisi', def: 10 }
@@ -1566,6 +1619,12 @@
           target19Dec: '32 – 35 kg (3x8-10)',
           plafon: 'Lebar V-Taper',
           info: '• Napas: Tarik saat beban naik meregang, buang saat menarik palang ke dada atas.\n• Genggaman: Kaitkan di lipatan pangkal jari (Anti-Pinch Grip).\n• Eksekusi: Busungkan dada sedikit, tarik siku turun menuju saku belakang.\n• Progresi: Naik 1 pin setelah mampu 3x12 rep bersih di 2 sesi berurutan.',
+          warmupSet: {
+            defKg: 12.5,
+            defReps: 8,
+            restSec: 40,
+            note: 'Set 0 (Warm-Up): 1 set x 8 rep pakai ~50% beban kerja (12,5–15 kg) genggaman pangkal jari (anti-pinch). Rest 30–45 dtk, langsung pindahkan pin ke beban kerja di kursi.'
+          },
           metrics: [
             { key: 'lpd_kg', label: 'Beban (kg)', def: 25 },
             { key: 'lpd_reps', label: 'Repetisi', def: 10 }
@@ -1757,18 +1816,24 @@
       return [
         {
           id: 'lw_1',
-          title: '1. Dumbbell RDL (Romanian Deadlift)',
+          title: '1. Olympic Barbell RDL (Romanian Deadlift)',
           sets: rdlSets,
           reps: rdlRepsText,
-          load: 'Awal: 2 x 12,5 kg',
+          load: 'Kerja: 30–60 kg (Bar 20kg + Plate)',
           restSec: 105,
           compound: true,
           warning: '⚠️ WAJIB lepas sepatu lari berbantalan empuk! Gunakan kaus kaki / alas datar tipis.',
-          target19Dec: 'Kunci di 2 x 15 kg (Total 30 kg)',
-          plafon: 'Target Fungsional Galon 19-20 kg',
-          info: '• Napas: Kunci perut melingkar (bracing). Tarik napas saat dorong bokong lurus ke belakang (lutut sedikit ditekuk terkunci), buang saat berdiri mengunci panggul.\n• Genggaman: Lipatan pangkal jari (Anti-Pinch). DB menyusur rapat di paha.\n• Plafon: Setelah stabil 2x12,5 kg, naik ke 2x15 kg lalu PERTAHANKAN agar pemulihan lari tetap segar.',
+          target19Dec: 'Plafon Fungsional: 60 kg (8–10 rep)',
+          plafon: 'Rantai Posterior & Kapasitas Angkat',
+          info: '• Napas: Kunci perut melingkar 360° (bracing). Tarik napas saat dorong bokong lurus ke belakang (lutut sedikit ditekuk terkunci, lats dikunci menekan batang besi rapat ke paha/tulang kering), buang saat berdiri mengunci panggul.\n• Genggaman: Lipatan pangkal jari (Anti-Pinch Grip) selebar luar paha.\n• Progresi: Mulai beban kerja 30 kg (Bar 20 kg + 5 kg kiri-kanan) dengan RIR 3 ketat hingga mencapai plafon fungsional 60 kg agar lari tetap segar.',
+          warmupSet: {
+            defKg: 20,
+            defReps: 8,
+            restSec: 60,
+            note: 'Set 0 (Warm-Up): 1 set x 8 rep pakai Batang Besi Olympic Kosong (20 kg). Fokus hip hinge, lats depression & bracing 360°. Rest 45–60 dtk sembari pasang piringan beban.'
+          },
           metrics: [
-            { key: 'rdl_kg', label: 'Beban DB (kg)', def: 12.5 },
+            { key: 'rdl_kg', label: 'Total Bar+Plate (kg)', def: 30 },
             { key: 'rdl_reps', label: 'Repetisi', def: 8 }
           ]
         },
@@ -1784,6 +1849,12 @@
           target19Dec: 'Kunci di 1 x 15 kg (2x10 rep)',
           plafon: 'Kuadrisep & Core Tegak',
           info: '• Napas: Perut terkunci. Tarik saat turun jongkok di antara paha, buang saat mendorong lantai berdiri.\n• Plafon: Naikkan hingga 1x15 kg (2x10 rep), lalu pertahankan.',
+          warmupSet: {
+            defKg: 0,
+            defReps: 5,
+            restSec: 30,
+            note: 'Set 0 (Warm-Up): 1 set x 5 rep Bodyweight Squat (0 kg) tepat di depan DB kerja (tahan jongkok bawah 2 dtk/rep buka panggul & engkel). Rest 30 dtk lalu angkat DB.'
+          },
           metrics: [
             { key: 'gsq_kg', label: 'Beban DB (kg)', def: 10 },
             { key: 'gsq_reps', label: 'Repetisi', def: 8 }
@@ -1838,6 +1909,7 @@
         }
       ];
     }
+
     function getUpperBExercises(p) {
       if (p === 9) {
         return getUpperAExercises(9);
@@ -1858,6 +1930,12 @@
           target19Dec: '25 – 27 kg (3x10-12)',
           plafon: 'Penarik Bahu Tegap Otomatis',
           info: '• Napas: Tarik saat gagang maju meregangkan belikat, buang saat menarik ke perut atas.\n• Wajib: Jepit kedua tulang belikat ke belakang dan TAHAN 2 DETIK PENUH di setiap repetisi.\n• Progresi: Naik 1 pin setelah mampu 3x12 rep dengan tahanan 2 detik bersih.',
+          warmupSet: {
+            defKg: 12.5,
+            defReps: 8,
+            restSec: 40,
+            note: 'Set 0 (Warm-Up): 1 set x 8 rep pakai ~50% beban kerja (12,5 kg), fokus tarikan awal bahu ke belakang-bawah & jepitan belikat 1–2 dtk. Rest 30–45 dtk, langsung pindah pin.'
+          },
           metrics: [
             { key: 'scr_kg', label: 'Beban (kg)', def: 18 },
             { key: 'scr_reps', label: 'Repetisi', def: 10 }
@@ -2027,16 +2105,15 @@
       }
       return { gate, score, hrDrift };
     }
-
     /* =========================================================================
-       6. GUIDED RUN QUEUE BUILDER (WED RUN 1, FRI RUN 2, SUN RUN 3)
+       6. GUIDED RUN QUEUE BUILDER (TUE RUN 1, FRI RUN 2, SUN RUN 3)
        ========================================================================= */
     function getRunSessionForDay(dayKey, p = Number(ST.phase)) {
       const schedType = getEffectiveScheduleType(dayKey);
       const readiness = getCurrentReadiness(p, dayKey);
       const doms = getDomsStatus(p);
 
-      // 1. WEDNESDAY RUN 1 (Easy Run Zona 2 + Strides)
+      // 1. TUESDAY RUN 1 (Easy Run Zona 2 + Strides — Pasca Lower)
       if (schedType === 'lower_plus_run1' || schedType === 'upper_a_plus_run1') {
         const isW0 = (p === 0);
         const isW9 = (p === 9);
@@ -2062,7 +2139,7 @@
           id: 'run1',
           title: isW9
             ? '5. LARI 1: Lari Outdoor Easy Run Z2 (20 mnt) + 3x20 dtk Strides'
-            : `8. LARI 1 (Langsung Setelah Beban): Easy Run Zona 2 ${isW0 ? '(20 Menit Tanpa Strides)' : '+ 3x Strides (23 Menit)'}`,
+            : `6. LARI 1 (Langsung Setelah Lower): Easy Run Zona 2 ${isW0 ? '(20 Menit Tanpa Strides)' : '+ 3x Strides (23 Menit)'}`,
           warning: '👟 Pasang kembali SEPATU LARI berbantalan nyaman sebelum mulai berlari!',
           targetBadge: isW0 ? '20 Menit (Z2 Murni)' : '23 Menit (Termasuk 3x Strides)',
           hrZoneBadge: 'Zona 2: 138–152 bpm',
@@ -2092,7 +2169,7 @@
               { label: 'Jalan Kaki Santai Pemulihan Aktif', sec: 1200, desc: 'Speed 4,2–4,8 km/jam atau istirahat penuh.' }
             ],
             metrics: [
-              { key: 'run2_min', label: 'Total (mnt)', def: 20 },
+              { key: 'run2_min', label: 'Durasi (mnt)', def: 20 },
               { key: 'run2_km', label: 'Jarak (km)', def: '' },
               { key: 'run2_pace', label: 'Pace (menit/km)', def: '13:20', isText: true, placeholder: 'mm:ss (cth 13:20)' },
               { key: 'run2_best_pace', label: 'Pace Tercepat (/km)', def: '', isText: true, placeholder: 'mm:ss' },
@@ -2117,7 +2194,7 @@
               { label: 'Pendinginan Jalan Santai', sec: 180, desc: 'Speed 4,5 km/jam' }
             ],
             metrics: [
-              { key: 'run2_min', label: 'Total (mnt)', def: 25 },
+              { key: 'run2_min', label: 'Durasi (mnt)', def: 25 },
               { key: 'run2_km', label: 'Jarak (km)', def: '' },
               { key: 'run2_pace', label: 'Pace (menit/km)', def: '10:31', isText: true, placeholder: 'mm:ss (cth 10:31)' },
               { key: 'run2_best_pace', label: 'Pace Tercepat (/km)', def: '', isText: true, placeholder: 'mm:ss' },
@@ -2193,7 +2270,7 @@
           hrZoneBadge: 'Zona 3: 152–166 bpm',
           queue,
           metrics: [
-            { key: 'run2_min', label: 'Total (mnt)', def: 30 },
+            { key: 'run2_min', label: 'Durasi (mnt)', def: 30 },
             { key: 'run2_km', label: 'Jarak (km)', def: '' },
             { key: 'run2_pace', label: 'Pace (menit/km)', def: '8:57', isText: true, placeholder: 'mm:ss (cth 8:57)' },
             { key: 'run2_best_pace', label: 'Pace Tercepat (/km)', def: '', isText: true, placeholder: 'mm:ss (cth 8:10)' },
@@ -2208,42 +2285,6 @@
       if (dayKey === 'sun') {
         const totalMin = LONG_RUN_TARGETS[p] || 45;
         const isTestWeek = (p === 0 || p === 4 || p === 8);
-        const mainZ2Min = Math.max(15, totalMin - 7);
-        let queue = [
-          { label: '1. Transisi Jalan Cepat', sec: 60, desc: 'Speed 4,8 km/jam' },
-          { label: '2. Pos Pemeriksaan Jogging Jangkar', sec: 180, desc: 'Speed 5,5 km/jam. Biarkan pembuluh kapiler melebar & HR mengetuk pintu Zona 2 ~138 bpm' }
-        ];
-
-        if (isTestWeek) {
-          queue.push({
-            label: '3A. Lari Zona 2 Pra-Tes (Menit 4 s.d. 10)',
-            sec: 360,
-            desc: 'Speed 5,8–6,0 km/jam stabil sebelum masuk jendela Tes 10 Menit.'
-          });
-          queue.push({
-            label: '🎯 3B. JENDELA TES SUBMAKSIMAL PACE-HR (Menit 10 s.d. 20)',
-            sec: 600,
-            desc: 'KUNCI SPEED TEPAT DI 6,0 KM/JAM (Pace 10:00/km) selama 10 menit penuh! Catat rata-rata HR segmen ini di bawah.'
-          });
-          const remAfterTestMin = Math.max(5, mainZ2Min - 16);
-          queue.push({
-            label: `3C. Lanjutan Lari Konstan Zona 2 (${remAfterTestMin} Menit)`,
-            sec: remAfterTestMin * 60,
-            desc: 'Speed 5,8–6,3 km/jam (HR 138–152 bpm, Lulus Talk Test). Jika lewat menit ke-30 HR >152 bpm karena cardiac drift, turunkan speed ke 5,6–5,8 km/jam.'
-          });
-        } else {
-          queue.push({
-            label: `3. Lari Konstan Zona 2 (${mainZ2Min} Menit, 138–152 bpm)`,
-            sec: mainZ2Min * 60,
-            desc: 'Speed 5,8–6,3 km/jam (Lulus Talk Test). Jika setelah menit ke-30 HR merangkak >152 bpm karena cardiac drift, turunkan speed ke 5,6–5,8 km/jam.'
-          });
-        }
-
-        queue.push({
-          label: '4. Pendinginan Jalan Santai',
-          sec: 180,
-          desc: 'Speed 4,5 km/jam hingga napas pulih.'
-        });
 
         const metrics = [
           { key: 'run3_min', label: 'Durasi (mnt)', def: totalMin },
@@ -2267,7 +2308,7 @@
             : 'Metode Jangkar 5,5 km/jam: Jaga HR 138–152 bpm & wajib lulus Talk Test kalimat utuh.',
           targetBadge: `${totalMin} Menit Long Run`,
           hrZoneBadge: 'Zona 2: 138–152 bpm',
-          queue,
+          queue: [],
           metrics
         };
       }
@@ -2322,6 +2363,7 @@
         ]
       }
     ];
+
     /* =========================================================================
        8. BACKGROUND-RESILIENT FLOATING TIMER & GUIDED RUN TIMER ENGINE
        ========================================================================= */
@@ -2619,7 +2661,7 @@
     });
 
     /* =========================================================================
-       9. STATE MUTATION HANDLERS & PER-SET METRIC ENGINE (HEVY STYLE)
+       9. STATE MUTATION HANDLERS & PER-SET METRIC ENGINE (HEVY STYLE + SET 0)
        ========================================================================= */
     function switchTab(tabName) {
       ST.tab = tabName;
@@ -2666,6 +2708,35 @@
       ST.domsLog[key][field] = val;
       saveState();
       renderApp();
+    }
+
+    // Set 0 (Warm-Up) isolated toggle handler (stored in _sw0 so _s0, _s1, _s2 never shift)
+    function toggleWarmupSet(exId, restSec) {
+      const key = `w${ST.phase}_${ST.day}_${exId}_sw0`;
+      const nextVal = !ST.setsDone[key];
+      ST.setsDone[key] = nextVal;
+      saveState();
+      if (nextVal && restSec > 0) {
+        startFloatingTimer(restSec, 'Transisi Set 0 -> Set 1', false);
+      }
+      renderApp();
+    }
+
+    function updateWarmupMetric(metricKey, val) {
+      const fullKey = `w${ST.phase}_${metricKey}_sw0`;
+      ST.metrics[fullKey] = val;
+      saveState();
+    }
+
+    function getWarmupMetricVal(metricKey, defVal) {
+      const pCurr = Number(ST.phase);
+      for (let p = pCurr; p >= 0; p--) {
+        const wuKey = `w${p}_${metricKey}_sw0`;
+        if (ST.metrics[wuKey] !== undefined && ST.metrics[wuKey] !== '') {
+          return ST.metrics[wuKey];
+        }
+      }
+      return defVal;
     }
 
     function toggleExerciseSet(exId, setIdx, restSec) {
@@ -2753,7 +2824,7 @@
       if (el) el.classList.toggle('open');
     }
 
-        function updateSwimField(field, val) {
+    function updateSwimField(field, val) {
       const key = `w${ST.phase}_${ST.day}`;
       if (!ST.swimDone[key]) {
         ST.swimDone[key] = { dur: '20', dist: '', laps: '1', style: 'Dada / Punggung Santai', done: false };
@@ -2762,7 +2833,6 @@
       saveState();
       if (field === 'done') renderApp();
     }
-
 
     function isDayCompleted(p, dayKey) {
       const exList = (function() {
@@ -2880,7 +2950,7 @@
               ⚡ <b>Mode Kuning Aktif:</b> Pada hari Jumat, Lari 2 otomatis diubah dari Tempo Z3 ke <b>Easy Run Zona 2 (25–30 mnt)</b>.
             </div>
             <div class="toggle-row" onclick="toggleStateFlag('yellowCutSet')">
-              <span>⚡ Potong -1 Set Semua Gerakan Gym (Min 1 Set)</span>
+              <span>⚡ Potong -1 Set Kerja Gerakan Gym (Set 0 Warm-Up Tetap Ada)</span>
               <div class="switch-pill ${ST.yellowCutSet ? 'on' : ''}"></div>
             </div>
           ` : ''}
@@ -2899,7 +2969,7 @@
 
           ${p === 5 ? `
             <div class="toggle-row" onclick="toggleStateFlag('w5Deload')">
-              <span>🌿 Mode Deload Pekan 5 (Gym 2 Set, Jumat Easy Z2 25m, Ahad 45m)</span>
+              <span>🌿 Mode Deload Pekan 5 (Gym 2 Set Kerja, Jumat Easy Z2 25m, Ahad 45m)</span>
               <div class="switch-pill ${ST.w5Deload ? 'on' : ''}"></div>
             </div>
           ` : ''}
@@ -2975,7 +3045,7 @@
                   <strong style="font-size:12.5px;">${w.title}</strong>
                   <span class="badge-pill badge-gold">${w.badge}</span>
                 </div>
-                <div style="font-size:11.5px; color:var(--muted); margin-top:3px;">${w.info}</div>${w.timerSec > 0 ? `
+                <div style="font-size:11.5px; color:var(--muted); margin-top:3px; white-space:pre-line;">${w.info}</div>${w.timerSec > 0 ? `
                   <button class="btn btn-cyan" style="margin-top:6px; padding:5px 9px;"
                     onclick="startFloatingTimer(${w.timerSec}, '${w.title.replace(/'/g, '')}', true)">
                     ⏱️ Timer ${w.timerSec} dtk
@@ -2987,21 +3057,22 @@
         `;
       }
 
-      // 5. EXERCISE CARDS FOR CURRENT DAY (HEVY-STYLE PER-SET INPUTS)
+      // 5. EXERCISE CARDS FOR CURRENT DAY (HEVY-STYLE PER-SET INPUTS + SET 0 WARM-UP)
       const exercises = getDayExercises(d);
       if (exercises.length > 0) {
         const dayHeaderTitle = (d === 'mon' || d === 'thu')
-          ? '🧘 Rutinitas Koreksi Postur & Anti-Text Neck (~8 Menit)'
+          ? '🧘 POSTURAL NECK RESET & 3-WAY ANKLE PREHAB (~11 Menit)'
           : (schedType.includes('upper_a')
               ? '🏋️ GYM 1 — UPPER A (V-Taper, Upper Chest & Forearm #1)'
               : (schedType.includes('lower')
-                  ? '🦵 GYM 2 — LOWER (Betis, Panggul & Kapasitas Galon)'
+                  ? '🦵 GYM 2 — LOWER (Olympic Barbell RDL, Betis & Kapasitas Angkat)'
                   : '🏋️ GYM 3 — UPPER B (Anti-Slouch, Back Density & Forearm #2)'));
 
         html += `<div class="section-label"><span>${dayHeaderTitle}</span><span>${PHASE_NAMES[p].split(':')[0]}</span></div>`;
 
         exercises.forEach(ex => {
           let effSets = ex.sets;
+          // Deload W5 & Yellow Mode only cut working sets, never removing Set 0 (WU)
           if (p === 5 && ST.w5Deload && effSets === 3) {
             effSets = 2;
           }
@@ -3026,6 +3097,37 @@
               </div>
             `;
 
+            // Render Set 0 (Warm-Up) row at the very top of .hevy-sets-wrap if defined
+            if (ex.warmupSet) {
+              const wuDoneKey = `w${p}_${d}_${ex.id}_sw0`;
+              const isWuDone = Boolean(ST.setsDone[wuDoneKey]);
+              const wuVal0 = getWarmupMetricVal(m0.key, ex.warmupSet.defKg);
+              const wuVal1 = m1 ? getWarmupMetricVal(m1.key, ex.warmupSet.defReps) : '';
+
+              setsBlockHtml += `
+                <div class="hevy-set-row warmup-row ${isWuDone ? 'done' : ''}">
+                  <button class="set-btn ${isWuDone ? 'completed' : ''}"
+                    onclick="toggleWarmupSet('${ex.id}', ${ex.warmupSet.restSec || 40})">
+                    ${isWuDone ? '✓' : '○'} Set 0 (WU)
+                  </button>
+                  <div class="hevy-input-box">
+                    <span>WU ${m0.label}</span>
+                    <input type="number" step="0.5" value="${wuVal0}"
+                      onchange="updateWarmupMetric('${m0.key}', this.value)" />
+                  </div>
+                  ${m1 ? `
+                    <div class="hevy-input-box">
+                      <span>WU ${m1.label}</span>
+                      <input type="number" step="0.5" value="${wuVal1}"
+                        onchange="updateWarmupMetric('${m1.key}', this.value)" />
+                    </div>
+                  ` : `<div></div>`}
+                  <div class="hevy-warmup-note">${ex.warmupSet.note}</div>
+                </div>
+              `;
+            }
+
+            // Render Working Sets (Set 1, Set 2, Set 3 -> stored at _s0, _s1, _s2)
             for (let s = 0; s < effSets; s++) {
               const sKey = `w${p}_${d}_${ex.id}_s${s}`;
               const isDone = Boolean(ST.setsDone[sKey]);
@@ -3075,7 +3177,7 @@
             }
             setsBlockHtml += `</div>`;
           } else {
-            // Postural / Neck exercises without load-rep inputs
+            // Postural / Neck exercises (1-5) without load-rep inputs
             setsBlockHtml += `<div class="sets-row">`;
             for (let s = 0; s < effSets; s++) {
               const sKey = `w${p}_${d}_${ex.id}_s${s}`;
@@ -3096,7 +3198,7 @@
               <div class="card-header">
                 <div class="card-title">${ex.title}</div>
                 <span class="badge-pill ${ex.compound ? 'badge-gold' : 'badge-cyan'}">
-                  ${ex.setsLabel || `${effSets} Set`}
+                  ${ex.setsLabel || `${ex.warmupSet ? 'WU + ' : ''}${effSets} Set`}
                 </span>
               </div>
 
@@ -3132,37 +3234,28 @@
         });
       }
 
-      // 6. GUIDED RUN CARD (WED, FRI, SUN — PACE, JARAK KM & MAX HR)
+      // 6. GUIDED RUN CARD (TUE RUN 1, FRI RUN 2 WITH CONSOLE; SUN RUN 3 SIMPLIFIED WITHOUT CONSOLE)
       const runSession = getRunSessionForDay(d, p);
       if (runSession) {
         const runDoneKey = `w${p}_${d}_run_done`;
         const isRunDone = Boolean(ST.setsDone[runDoneKey]);
-        const isCurrentRun = (runTimerState.dayKey === d && runTimerState.phase === p);
-        const curStepIdx = isCurrentRun ? runTimerState.stepIdx : 0;
-        const curStep = runSession.queue[curStepIdx] || runSession.queue[0];
+        const showGuidedConsole = (runSession.id !== 'run3' && runSession.queue && runSession.queue.length > 0);
 
-        const initClockText = isCurrentRun
-          ? (runTimerState.active
-              ? (runTimerState.prepMode
-                  ? `SIAP ${Math.max(1, Math.ceil((runTimerState.prepEndTime - Date.now()) / 1000))}`
-                  : formatMMSS(Math.max(0, Math.ceil((runTimerState.targetEndTime - Date.now()) / 1000))))
-              : (runTimerState.paused ? formatMMSS(runTimerState.remainingSecOnPause) : formatMMSS(curStep.sec)))
-          : formatMMSS(curStep.sec);
+        let consoleHtml = '';
+        if (showGuidedConsole) {
+          const isCurrentRun = (runTimerState.dayKey === d && runTimerState.phase === p);
+          const curStepIdx = isCurrentRun ? runTimerState.stepIdx : 0;
+          const curStep = runSession.queue[curStepIdx] || runSession.queue[0];
 
-        html += `
-          <div class="section-label">
-            <span>🏃 PANDUAN SESI LARI & INTERVAL</span>
-            <span>${runSession.hrZoneBadge}</span>
-          </div>
+          const initClockText = isCurrentRun
+            ? (runTimerState.active
+                ? (runTimerState.prepMode
+                    ? `SIAP ${Math.max(1, Math.ceil((runTimerState.prepEndTime - Date.now()) / 1000))}`
+                    : formatMMSS(Math.max(0, Math.ceil((runTimerState.targetEndTime - Date.now()) / 1000))))
+                : (runTimerState.paused ? formatMMSS(runTimerState.remainingSecOnPause) : formatMMSS(curStep.sec)))
+            : formatMMSS(curStep.sec);
 
-          <div class="card ${isRunDone ? 'card-green' : (runSession.isTestWeek ? 'card-gold' : 'card-cyan')}">
-            <div class="card-header">
-              <div class="card-title">${runSession.title}</div>
-              <span class="badge-pill badge-cyan">${runSession.targetBadge}</span>
-            </div>
-
-            <div class="warn-banner">${runSession.warning}</div>
-
+          consoleHtml = `
             <div class="run-console">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span class="badge-pill badge-gold">Segmen ${curStepIdx + 1}/${runSession.queue.length}</span>
@@ -3197,6 +3290,24 @@
                 `).join('')}
               </div>
             </div>
+          `;
+        }
+
+        html += `
+          <div class="section-label">
+            <span>🏃 PANDUAN SESI LARI & INTERVAL</span>
+            <span>${runSession.hrZoneBadge}</span>
+          </div>
+
+          <div class="card ${isRunDone ? 'card-green' : (runSession.isTestWeek ? 'card-gold' : 'card-cyan')}">
+            <div class="card-header">
+              <div class="card-title">${runSession.title}</div>
+              <span class="badge-pill badge-cyan">${runSession.targetBadge}</span>
+            </div>
+
+            <div class="warn-banner">${runSession.warning}</div>
+
+            ${consoleHtml}
 
             <div class="grid-2" style="margin:10px 0;">
               ${runSession.metrics.map(m => `
@@ -3526,7 +3637,7 @@
           </div>
         </div>
 
-        <!-- TABEL 4: MASTER LIFT SUMMARY (MENAMPILKAN SET 1 SEBAGAI REFERENSI) -->
+        <!-- TABEL 4: MASTER LIFT SUMMARY (MENAMPILKAN OLYMPIC BARBELL RDL & SET 1 SEBAGAI REFERENSI) -->
         <div class="section-label">
           <span>🏆 TABEL 4 — MASTER LIFT & TARGET KAPASITAS (19 DES)</span>
         </div>
@@ -3567,9 +3678,9 @@
                   <td>25 – 27 kg (3x10-12)</td>
                 </tr>
                 <tr>
-                  <td><b>Dumbbell RDL (RIR 3)</b></td>
-                  <td>${getSetMetricVal('rdl_kg', 0, 12.5)} kg × ${getSetMetricVal('rdl_reps', 0, 8)} rep</td>
-                  <td>Kunci 2 x 15 kg (30 kg)</td>
+                  <td><b>Olympic Barbell RDL (RIR 3)</b></td>
+                  <td>${getSetMetricVal('rdl_kg', 0, 30)} kg × ${getSetMetricVal('rdl_reps', 0, 8)} rep</td>
+                  <td>Plafon Fungsional 60 kg (8-10 rep)</td>
                 </tr>
                 <tr>
                   <td><b>DB Goblet Squat</b></td>
@@ -3602,7 +3713,7 @@
       const dataStr = JSON.stringify(ST, null, 2);
       if (navigator.clipboard) {
         navigator.clipboard.writeText(dataStr).then(() => {
-          alert('✅ Data JSON AEROFRAME V1.0 berhasil disalin ke Clipboard!');
+          alert('✅ Data JSON AEROFRAME V2.0 berhasil disalin ke Clipboard!');
         }).catch(() => {});
       }
       const box = document.getElementById('json-io-box');
@@ -3615,7 +3726,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `aeroframe_v10_backup_W${ST.phase}.json`;
+      a.download = `aeroframe_v20_backup_W${ST.phase}.json`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -3676,7 +3787,7 @@
         </div>
         <div class="card">
           <div style="font-size:11.5px; color:var(--muted); margin-bottom:8px;">
-            Seluruh log latihan (termasuk metrik per set ala Hevy & pace lari) tersimpan otomatis di perangkat bawah kunci <code>${STORAGE_KEY}</code>. File backup JSON lama otomatis dikonversi aman tanpa crash.
+            Seluruh log latihan (termasuk metrik per set ala Hevy, Set 0, & pace lari) tersimpan otomatis di perangkat bawah kunci <code>${STORAGE_KEY}</code>. File backup JSON lama otomatis dikonversi aman tanpa crash.
           </div>
           <div class="action-row" style="margin-bottom:8px;">
             <button class="btn btn-gold" onclick="copyBackupJson()">📋 Copy JSON</button>
