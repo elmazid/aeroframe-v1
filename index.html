@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#12141A" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <meta name="apple-mobile-web-app-title" content="AEROFRAME 3.0" />
+  <meta name="apple-mobile-web-app-title" content="AEROFRAME 4.0" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="./manifest.json" />
-  <title>AEROFRAME V3.0 — Endurance & Aesthetic Hybrid System</title>
+  <title>AEROFRAME V4.0 — Endurance & Aesthetic Hybrid System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -456,6 +456,46 @@
       color: var(--green);
     }
 
+    .r7-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 7px;
+    }
+
+    .r7-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 9px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      line-height: 1.35;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .r7-item .r7-mark {
+      min-width: 18px;
+      font-family: var(--font-head);
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .r7-item.done {
+      background: var(--green-dim);
+      border-color: var(--green);
+    }
+
+    .r7-item.done .r7-mark {
+      color: var(--green);
+    }
+
     /* HEVY-STYLE PER-SET LOGGING ROWS */
     .hevy-sets-wrap {
       display: flex;
@@ -816,7 +856,7 @@
     <header class="top-bar">
       <div class="top-row-1">
         <div>
-          <div class="brand-title">⚡ AEROFRAME V3.0</div>
+          <div class="brand-title">⚡ AEROFRAME V4.0</div>
           <span class="brand-sub">Endurance & Aesthetic Hybrid • 54→55 kg</span>
         </div>
         <button id="btn-audio-unlock" class="btn-audio-test" onclick="unlockHeadsetAudio(true)">
@@ -828,7 +868,7 @@
           <option value="0">W0: Pekan Adaptasi (20–25 Okt 2026)</option>
           <option value="1">W1: Fase Inti Gym Pekan 1 (26 Okt–1 Nov)</option>
           <option value="2">W2: Fase Inti Gym Pekan 2 (2–8 Nov)</option>
-          <option value="3">W3: Pekan 3 · V3.0 Berlaku Penuh (9–15 Nov)</option>
+          <option value="3">W3: Pekan 3 · V4.0 Berlaku Penuh (9–15 Nov)</option>
           <option value="4">W4: Pekan 4 + Evaluasi Tengah M4 (16–22 Nov)</option>
           <option value="5">W5: Pekan 5 / Opsi Deload (23–29 Nov)</option>
           <option value="6">W6: Pekan 6 (30 Nov–6 Des)</option>
@@ -896,7 +936,7 @@
       'W0: Pekan Adaptasi (20–25 Okt 2026)',
       'W1: Pekan 1 (26 Okt – 1 Nov 2026)',
       'W2: Pekan 2 (2 – 8 Nov 2026)',
-      'W3: Pekan 3 — V3.0 Berlaku Penuh (9 – 15 Nov 2026)',
+      'W3: Pekan 3 — V4.0 Berlaku Penuh (9 – 15 Nov 2026)',
       'W4: Pekan 4 + Evaluasi Tengah M4 (16 – 22 Nov 2026)',
       'W5: Pekan 5 / Opsi Deload (23 – 29 Nov 2026)',
       'W6: Pekan 6 (30 Nov – 6 Des 2026)',
@@ -908,6 +948,8 @@
     const MAX_PHASE = 8;
     const V3_START_PHASE = 3;          // V3.0 berlaku penuh mulai W3 (Senin, 9 Nov 2026)
     const V3_UPPER_B_START_PHASE = 2;  // Upper B V3.0 (Assisted Pull-Up di Sabtu) sejak Sabtu W2 (7 Nov 2026)
+    const V4_START_PHASE = 3;          // V4.0 berlaku mulai W3 (Senin, 9 Nov 2026): carry, Rutin 7 Gerakan, Set 0 baru
+    const V4_UPPER_B_START_PHASE = 2;  // V4.0 dimajukan mulai Sabtu W2 (7 Nov 2026): Sabtu & Ahad W2 sudah V4.0
 
     const LONG_RUN_TARGETS = [35, 38, 40, 42, 45, 45, 48, 50, 50];
 
@@ -1010,7 +1052,7 @@
         }
 
         // Skip keys that are already per-set (_s0, _s1, etc.), Set 0 warmup (_sw0), or run metrics
-        if (/_(s\d+|sw0)$/.test(k) || /^w\d+_(run[123]_|test_hr_60)/.test(k)) {
+        if (/_(s\d+|sw\d+)$/.test(k) || /^w\d+_(run[123]_|test_hr_60)/.test(k)) {
           return;
         }
 
@@ -1266,7 +1308,8 @@
       return Number(p) >= 4 && Number(p) <= MAX_PHASE && g.score <= 3 && !isStartMode(p);
     }
 
-    function getWarmupCooldownData(dayKey) {
+    // Pemanasan & pendinginan V3.0 (dipakai untuk riwayat W0–W2)
+    function getWarmupCooldownDataV3(dayKey) {
       if (dayKey === 'mon' || dayKey === 'thu') return null;
 
       const schedType = getEffectiveScheduleType(dayKey);
@@ -1427,6 +1470,190 @@
               info: '• Torso Twists: 10× memutar badan kiri-kanan terkontrol.\n• Front-to-Back Leg Swings: pegangan tiang, 10×/kaki.\n• Side-to-Side Leg Swings: pegangan tiang, 8×/kaki.\n• Dynamic Calf-Ankle Rockers: 10× berjinjit naik-turun + dorong lutut sedikit maju saat tumit menapak.\n→ Lanjut ke Jangkar 4 Menit (segmen 1–2 di kartu Lari).'
             }
           ],
+          cooldownTitle: '❄️ Pendinginan Lower & Lari (±3 Menit — Setelah Lari)',
+          cooldown: lowerRunCooldown
+        };
+      }
+
+      return null;
+    }
+
+    function isV4(p) {
+      return Number(p) >= V4_START_PHASE;
+    }
+
+    // V4.0 per hari: dimajukan mulai Sabtu W2 (Sabtu & Ahad W2); Senin–Jumat mulai W3
+    function isV4Day(p, dayKey) {
+      if (dayKey === 'sat' || dayKey === 'sun') return Number(p) >= V4_UPPER_B_START_PHASE;
+      return isV4(p);
+    }
+
+    function getWarmupCooldownData(dayKey) {
+      return isV4Day(ST.phase, dayKey) ? getWarmupCooldownDataV4(dayKey) : getWarmupCooldownDataV3(dayKey);
+    }
+
+    // V4.0 (D.1): Rutin Pemanasan 7 Gerakan — ±2,5 menit, berdiri, boleh berpegangan ke treadmill, tanpa alat
+    const RUTIN_7 = [
+      'Arm circles: 10× ke depan, 10× ke belakang, dari putaran kecil ke besar.',
+      'Chest hugs: peluk badan sendiri lalu buka lengan lebar, 10×.',
+      'W squeeze: siku menekuk 90° di samping badan, tarik siku turun & ke belakang sambil memutar lengan bawah keluar sampai belikat terjepit (huruf W); tahan 1 detik, 10×.',
+      'Torso twists: 10×.',
+      'Leg swings depan-belakang: 10× per kaki.',
+      'Leg swings samping: 8× per kaki.',
+      'Calf-ankle rockers: 10×.'
+    ];
+
+    function getRutin7Step(prefix, nextText) {
+      return {
+        title: `${prefix} — Rutin Pemanasan 7 Gerakan`,
+        badge: '±2,5 mnt',
+        timerSec: 150,
+        info: 'Berdiri, boleh berpegangan ke treadmill, tanpa alat. Centang tiap gerakan setelah selesai.' + (nextText ? '\n→ ' + nextText : ''),
+        checklist: RUTIN_7
+      };
+    }
+
+    // Pemanasan & pendinginan V4.0 (mulai W3)
+    function getWarmupCooldownDataV4(dayKey) {
+      if (dayKey === 'mon' || dayKey === 'thu') return null;   // Senin & Kamis: tanpa pemanasan terpisah
+
+      const p = Number(ST.phase);
+
+      const upperCooldown = [
+        {
+          title: '1. Jalan Santai hingga HR < 120 bpm',
+          badge: '60–90 dtk',
+          timerSec: 75,
+          info: 'Jalan santai (treadmill 4,0–4,5 km/jam atau di ruangan) hingga napas tenang & HR < 120 bpm.'
+        },
+        {
+          title: '2. Doorway Chest Stretch + Overhead Lat/Triceps Stretch',
+          badge: '30 dtk/gerakan',
+          timerSec: 30,
+          info: 'Tempelkan lengan di kusen pintu/tiang, dorong dada maju perlahan 30 detik. Lalu angkat satu lengan ke atas kepala, tekuk siku, regangkan lat & triceps 30 detik per sisi (klik timer 30 dtk untuk tiap gerakan).'
+        },
+        {
+          title: '3. Napas 4-6',
+          badge: '3–4 kali',
+          timerSec: 40,
+          info: 'Tarik napas 4 detik lewat hidung, embuskan 6 detik lewat mulut, 3–4 kali.'
+        }
+      ];
+
+      const lowerRunCooldown = [
+        {
+          title: '1. Jalan 2 Menit hingga HR < 120 bpm',
+          badge: '2 mnt',
+          timerSec: 120,
+          info: 'Jalan 4,0–4,5 km/jam selama 2 menit hingga HR < 120 bpm.'
+        },
+        {
+          title: '2. Standing Calf, Half-Kneeling Hip Flexor & Hamstring Stretch',
+          badge: '30 dtk/kaki',
+          timerSec: 30,
+          info: 'Standing calf stretch, half-kneeling hip flexor stretch, dan hamstring stretch — masing-masing 30 detik per kaki (klik timer 30 dtk untuk tiap gerakan).<br><b>Half-Kneeling Hip Flexor Stretch:</b> berlutut satu kaki seperti posisi lunge (pakai alas lutut bila ada). Gulung panggul ke belakang (posterior pelvic tilt: tulang ekor diarahkan ke bawah) dan kencangkan bokong kaki yang berlutut. Dorong pinggul sedikit ke depan sampai terasa regangan di depan pinggul kaki belakang. Otot: iliopsoas & rectus femoris; sekaligus mengaktifkan gluteus maximus sisi yang sama.<br>❌ Tanda salah: terasa di pinggang, atau punggung bawah melengkung (panggul belum digulung).'
+        },
+        {
+          title: '3. Napas 4-6',
+          badge: '3–4 kali',
+          timerSec: 40,
+          info: 'Tarik napas 4 detik lewat hidung, embuskan 6 detik lewat mulut, 3–4 kali.'
+        }
+      ];
+
+      // Rabu & Sabtu (gym upper): treadmill 4–5 mnt → Rutin 7 Gerakan → Set 0
+      if (dayKey === 'wed' || dayKey === 'sat') {
+        const set0Info = dayKey === 'sat'
+          ? 'Assisted Pull-Up: pin bantuan +15 kg dari pin kerja × 5. Feet-Elevated Push-Up: push-up biasa × 5 (tempo santai). Seated Cable Row tanpa Set 0.'
+          : 'Incline DB Press: incline push-up × 6. Lat Pulldown: ±50% beban kerja (12,5–15 kg) × 8.';
+        return {
+          warmupTitle: '🔥 Pemanasan Upper: Treadmill → Rutin 7 Gerakan → Set 0',
+          warmup: [
+            {
+              title: 'Tahap 1 — Jalan Cepat di Treadmill',
+              badge: '4–5 mnt',
+              timerSec: 240,
+              info: 'Jalan cepat 4–5 menit (boleh incline 3–5%) sampai napas sedikit naik dan badan terasa hangat. Ambil batas atas (5 mnt) bila latihan pagi atau ruangan dingin.'
+            },
+            getRutin7Step('Tahap 2'),
+            {
+              title: 'Tahap 3 — Set 0 di Kartu Gerakan (D.2)',
+              badge: 'Langsung di Alat',
+              timerSec: 0,
+              info: set0Info + ' Centang baris [Set 0] di kartu gerakan. Set 0 tidak dihitung sebagai set kerja dan tidak dipotong saat Kuning maupun Deload.'
+            }
+          ],
+          cooldownTitle: '❄️ Pendinginan Upper (±3 Menit)',
+          cooldown: upperCooldown
+        };
+      }
+
+      // Selasa (lari → lower): Rutin 7 Gerakan → Lari 1 → (W4+) Pogo Hops → Set 0 RDL
+      if (dayKey === 'tue') {
+        const gate = getTuesdayDomsGate(p);
+        const transition = [];
+        if (p >= 4) {
+          if (isPogoActive(p)) {
+            transition.push({
+              title: 'Tahap 3 — Ankle Pogo Hops (CEPAT)',
+              badge: '2 × 10 pantulan',
+              timerSec: 30,
+              info: 'Berdiri tegak, kaki rapat, tangan di pinggang, lutut hampir lurus. Lompat kecil cepat memantul dari ujung telapak kaki dengan kontak lantai sesingkat mungkin — cepat, ringan, rileks; bukan lompat tinggi. 2 set × 10 pantulan, rest 30 dtk (timer = rest).'
+            });
+          } else {
+            transition.push({
+              title: 'Tahap 3 — Ankle Pogo Hops: DITUNDA',
+              badge: 'Gerbang DOMS',
+              timerSec: 0,
+              info: isStartMode(p)
+                ? 'Pekan Mulai/Kembali: pogo hops belum dikerjakan.'
+                : `Skor Gerbang DOMS Kamis lalu ${gate.score}/10 (> 3) — pogo hops dilewati pekan ini.`
+            });
+          }
+        }
+        transition.push({
+          title: `Tahap ${3 + transition.length} — Set 0 RDL & Goblet Squat`,
+          badge: 'Di Kartu Gerakan',
+          timerSec: 0,
+          info: 'RDL: bar kosong 20 kg × 8 (+ set ramp ±70% beban kerja × 3–5 bila beban kerja ≥ 40 kg; jauh dari gagal). Goblet Squat: bodyweight squat × 5 (tahan bawah 2 dtk). Jaga jeda dari akhir lari ke RDL tetap singkat. Centang baris Set 0 di kartu gerakan.'
+        });
+
+        return {
+          warmupTitle: '🔥 Pemanasan Selasa: Rutin 7 Gerakan → Lari 1',
+          warmup: [
+            getRutin7Step('Tahap 1'),
+            {
+              title: 'Tahap 2 — Lari 1 = Pemanasan Umum (Kartu di Bawah)',
+              badge: '±20–23 mnt',
+              timerSec: 0,
+              info: 'Kerjakan kartu LARI 1 dengan sepatu lari. Setelah jalan transisi, lepas sepatu lari berbantalan empuk dan langsung lanjut ke Lower — tanpa mobilitas tambahan.'
+            }
+          ],
+          transitionTitle: p >= 4 ? '🔁 Transisi Lari 1 → Lower: Pogo Hops & Set 0' : '🔁 Transisi Lari 1 → Lower: Set 0',
+          transition,
+          cooldownTitle: '❄️ Pendinginan Lower & Lari (±3 Menit — Setelah Lower)',
+          cooldown: lowerRunCooldown
+        };
+      }
+
+      // Jumat & Ahad (lari): Rutin 7 Gerakan → kartu lari
+      if (dayKey === 'fri' || dayKey === 'sun') {
+        const run = getRunSessionForDay(dayKey, p);
+        let next = 'Lanjut ke kartu Lari.';
+        if (run && run.isWalk) {
+          next = 'Hari ini jalan santai 20–25 mnt (HR < 130 bpm) atau istirahat penuh.';
+        } else if (run && run.isTestWeek) {
+          next = 'Lanjut protokol Tes Pace-HR di kartu Lari apa adanya (tanpa perpanjangan jog dan pick-up).';
+        } else if (dayKey === 'sun') {
+          next = 'Lanjut jangkar 4 mnt (menit 0–4) di kartu Lari 3.' + (p >= 7 ? ' Outdoor: 3–5 menit pertama lebih pelan.' : '');
+        } else if (run && run.isTempo) {
+          next = 'Lanjut jangkar 4 mnt → jog Z2 5–6 mnt → 2 pick-up → interval (semua di kartu Lari 2).';
+        } else {
+          next = 'Lanjut jangkar 4 mnt di kartu Lari 2 (Easy Run pengganti: tanpa pick-up).';
+        }
+        return {
+          warmupTitle: '🔥 Pemanasan: Rutin 7 Gerakan → Kartu Lari',
+          warmup: [getRutin7Step('Tahap 1', next)],
           cooldownTitle: '❄️ Pendinginan Lower & Lari (±3 Menit — Setelah Lari)',
           cooldown: lowerRunCooldown
         };
@@ -1803,6 +2030,24 @@
         : (p <= 2 ? '12 rep (2 kaki, lantai datar, DB 1 × 10 kg)' : '12–15 rep (pinggir pijakan/defisit) · set terakhir lutut tekuk');
       const shoeWarn = '⚠️ WAJIB lepas sepatu lari berbantalan empuk! Pakai kaus kaki di lantai karet/matras atau alas datar tipis agar pijakan stabil.';
 
+      // V4.0: Suitcase Carry — mulai 1 tahap (2,5 kg) di bawah beban Farmer's Walk terakhir bila ada
+      const frmLast = getSetMetricVal('frm_kg', 0, null);
+      const sucDefKg = (frmLast !== null && frmLast !== '' && !isNaN(Number(frmLast))) ? Math.max(2.5, Number(frmLast) - 2.5) : 10;
+      const sucLoadText = (frmLast !== null && frmLast !== '' && !isNaN(Number(frmLast)))
+        ? `Mulai ${sucDefKg} kg/tangan (1 tahap di bawah Farmer ${frmLast} kg)`
+        : 'Awal: 10–12,5 kg per tangan';
+
+      // V4.0 (D.2): set ramp RDL ±70% × 3–5 bila beban kerja ≥ 40 kg (setelah Set 0 bar kosong)
+      const rdlWork = Number(getSetMetricVal('rdl_kg', 0, 30)) || 30;
+      const rdlRamp = (isV4(p) && rdlWork >= 40)
+        ? {
+            defKg: Math.round((rdlWork * 0.7) / 2.5) * 2.5,
+            defReps: 5,
+            restSec: 60,
+            note: `Set ramp: ±70% beban kerja (≈${Math.round((rdlWork * 0.7) / 2.5) * 2.5} kg dari ${rdlWork} kg) × 3–5 rep setelah Set 0 bar kosong. Jauh dari gagal; tidak dihitung set kerja.`
+          }
+        : null;
+
       return numberExercises([
         {
           id: 'lw_1',
@@ -1823,6 +2068,7 @@
             restSec: 60,
             note: 'Set 0: bar kosong 20 kg × 8. Latih pola hinge, bar rapat ke paha, bracing 360°. Istirahat 45–60 dtk sambil memasang plate.'
           },
+          rampSet: rdlRamp,
           metrics: [
             { key: 'rdl_kg', label: 'Total Bar+Plate (kg)', def: 30 },
             { key: 'rdl_reps', label: 'Repetisi', def: 8 }
@@ -1887,7 +2133,34 @@
             { key: 'calf_reps', label: 'Repetisi', def: p === 0 ? 10 : 12 }
           ]
         },
-        {
+        isV4(p) ? {
+          id: 'lw_suc',
+          name: 'DB Suitcase Carry',
+          tag: 'BARU',
+          tempo: 'WAKTU',
+          sets: frmSets,
+          unitLabel: 'Putaran',
+          reps: '30–35 langkah/sisi (kiri → langsung kanan)',
+          load: sucLoadText,
+          restSec: 60,
+          activeTimerSec: 30,
+          target19Dec: '20 kg/tangan × 35 langkah/sisi · Bonus 22,5 kg',
+          plafon: 'Obliques & Quadratus Lumborum, Gluteus Medius & Grip',
+          info: `• Otot Target: obliques & quadratus lumborum sisi yang berlawanan dengan beban (menahan badan agar tidak miring), gluteus medius kaki tumpu (menjaga panggul rata), grip & trapezius sisi yang memegang.
+• Format: 3 putaran × [30–35 langkah tangan kiri → langsung ganti tangan kanan 30–35 langkah]; rest 60–75 dtk antar-putaran. Satu baris set = satu putaran (kiri + kanan).
+• Eksekusi: ambil dumbbell dari samping kaki dengan hip hinge (punggung netral, tanpa memutar badan); berjalan tegak, bahu sejajar, langkah pendek dan stabil. Letakkan kembali dengan hip hinge, lalu ganti tangan.
+• Napas: Breathe Behind the Shield — perut tetap kencang dengan napas pendek yang ritmis.
+• ✅ Form Benar: badan tegak lurus, bahu sejajar, panggul rata.
+• ❌ Form Salah: badan miring ke arah beban atau sebaliknya; bahu sisi beban tertarik turun; panggul terangkat sebelah; jalan bergoyang kiri-kanan.
+• Awal: 10–12,5 kg per tangan. Bila sebelumnya memakai Farmer's Walk: mulai satu tahap (2,5 kg) di bawah beban Farmer's Walk per tangan yang terakhir.
+• Progresi: naik 2,5 kg bila 35 langkah per sisi stabil tanpa badan miring di ketiga putaran.
+• Fungsi: membawa beban asimetris sehari-hari (satu galon/ember di satu tangan); mengambil dumbbell dari samping kaki meniru mengangkat galon/ember dari lantai dengan satu tangan.
+• Catatan: per kilogram, tekanan ke tulang belakang lebih tinggi daripada beban yang dibagi ke dua tangan (McGill dkk., 2013) — naikkan beban bertahap. Dalam kehidupan sehari-hari, membagi beban ke dua tangan tetap pilihan terbaik bila memungkinkan.`,
+          metrics: [
+            { key: 'suc_kg', label: 'Beban/Tangan (kg)', def: sucDefKg },
+            { key: 'suc_steps', label: 'Langkah/Sisi', def: 30 }
+          ]
+        } : {
           id: 'lw_5',
           name: "DB Farmer's Walk",
           tempo: 'WAKTU',
@@ -2179,11 +2452,37 @@
         target19Dec: '+6–8 rep/set dari catatan pertama',
         plafon: 'Dada Atas, Deltoid Anterior & Triceps',
         info: '• Otot Target: pectoralis major dengan penekanan bagian klavikular (dada atas), karena sudut dorongnya mirip incline press; deltoid anterior, triceps, serratus anterior; core menahan badan tetap lurus.\n• Eksekusi: tangan sedikit lebih lebar dari bahu, badan lurus kaku dari kepala ke tumit, siku ±45° dari badan; turun ±2 detik sampai dada hampir menyentuh lantai, lalu dorong naik sambil membuang napas.\n• ✅ Form Benar: badan tetap lurus; terasa di dada atas dan triceps.\n• ❌ Form Salah: pinggul turun (perut melengkung) atau menukik ke atas; kepala mendongak/menunduk; siku melebar 90°.\n• Setup & Progresi: bila < 6 rep bersih, pakai pijakan lebih rendah (±20–30 cm) atau push-up biasa dulu. Bila > 15 rep bersih, naikkan pijakan atau tambah jeda 1 detik di posisi bawah. Catat repetisi sesi pertama sebagai acuan.',
+        warmupSet: isV4Day(p, 'sat')
+          ? { defKg: 0, defReps: 5, restSec: 30, note: 'Set 0: push-up biasa × 5 (tanpa pijakan → isi 0 cm), tempo santai. Tidak dihitung set kerja.' }
+          : undefined,
         metrics: [
           { key: 'fepu_cm', label: 'Pijakan (cm)', def: 40 },
           { key: 'fepu_reps', label: 'Repetisi', def: '' }
         ]
       });
+
+      // V4.0: Plate Bear-Hug Carry (Sabtu #4, setelah Feet-Elevated Push-Up) — mulai Sabtu W2
+      if (isV4Day(p, 'sat')) {
+        list.push({
+          id: 'ub_bhc',
+          name: 'Plate Bear-Hug Carry',
+          tag: 'BARU',
+          tempo: 'WAKTU',
+          sets: 2,
+          unitLabel: 'Putaran',
+          reps: '30–40 langkah',
+          load: 'Awal: plate 10–15 kg',
+          restSec: 60,
+          activeTimerSec: 30,
+          target19Dec: 'Plate 20 kg × 40 langkah',
+          plafon: 'Erector Spinae, Punggung Atas & Core Depan',
+          info: '• Otot Target: erector spinae & punggung atas (menahan badan agar tidak tertarik ke depan), core depan, biceps & brachialis (menyangga beban dari bawah), deltoid anterior.\n• Eksekusi: jongkok, peluk satu plate barbell dari lantai dalam posisi berdiri tegak (vertikal) menempel ke dada–perut; lengan melingkar, telapak dan lengan bawah menopang tepi bawah plate (siku ±90°, telapak menghadap atas); berdiri, lalu berjalan tegak dengan langkah pendek. Tidak memakai genggaman jari.\n• Napas: Breathe Behind the Shield — perut tetap kencang dengan napas pendek yang ritmis.\n• ✅ Form Benar: plate menempel ke badan, badan tegak.\n• ❌ Form Salah: badan condong ke belakang (pinggang melengkung) untuk mengimbangi beban; plate merosot atau menjauh dari badan.\n• Progresi: tambah langkah dulu (30 → 40); setelah 40 langkah stabil di kedua putaran, naik ke plate berikutnya dan mulai lagi dari 20–25 langkah.\n• Fungsi: pola memeluk beban di depan badan (galon dipeluk, pot); gerakan mengangkat dari lantai meniru mengangkat galon ke dispenser.',
+          metrics: [
+            { key: 'bhc_kg', label: 'Beban Plate (kg)', def: 10 },
+            { key: 'bhc_steps', label: 'Langkah', def: 30 }
+          ]
+        });
+      }
 
       list.push(exLateralRaise2(baseSets));
       list.push(exFacePull2());
@@ -2452,7 +2751,7 @@
             queue.push({ label: `Stride #${i}/3 — CEPAT (cadence ±170)`, sec: 20, desc: '±9,0–10,0 km/jam (6:40–6:00/km), RPE ±7, bukan sprint. Mulai dari batas bawah. Tekan tombol naik ±4 dtk sebelum segmen dimulai.' });
             queue.push({ label: `Jalan Pemulihan #${i}/3`, sec: 40, desc: '4,5 km/jam' });
           }
-          queue.push({ label: 'Jalan Transisi', sec: 60, desc: runFirst ? '4,0–4,5 km/jam → lanjut mobilitas singkat & Lower. Pendinginan lengkap setelah Lower.' : '4,0–4,5 km/jam → pendinginan.' });
+          queue.push({ label: 'Jalan Transisi', sec: 60, desc: runFirst ? '4,0–4,5 km/jam → lanjut ke Lower (W4+: pogo hops dulu); jaga jeda ke RDL tetap singkat. Pendinginan lengkap setelah Lower.' : '4,0–4,5 km/jam → pendinginan.' });
         }
         const totalMin = start ? 20 : 23;
 
@@ -2460,12 +2759,12 @@
           id: 'run1',
           title: `LARI 1 (${runFirst ? 'Sebelum Lower' : 'Setelah Lower'}): Easy Run Zona 2 ${start ? '(Tanpa Strides)' : '+ 3× Strides'} — ±${totalMin} Menit`,
           warning: runFirst
-            ? '👟 Urutan Selasa: Lari 1 dengan sepatu lari → lepas sepatu untuk Lower (gerakan 1–3). Jangan mulai dengan perut kosong atau kurang minum (sehari setelah puasa Senin).'
+            ? '👟 Urutan Selasa: Rutin 7 Gerakan → Lari 1 dengan sepatu lari → lepas sepatu untuk Lower (gerakan 1–3). Jangan mulai dengan perut kosong atau kurang minum (sehari setelah puasa Senin).'
             : '👟 Pasang kembali SEPATU LARI berbantalan nyaman sebelum mulai berlari!',
           targetBadge: `${totalMin} Menit ${start ? '(Z2 Murni)' : '(Termasuk Strides)'}`,
           hrZoneBadge: 'Zona 2: 138–152 bpm',
           queue,
-          guide: '• Jangkar 4 menit (F.2): 00:00–01:00 jalan 4,8 km/jam → 01:00–04:00 jog 5,5 km/jam. Catat HR menit ke-4 di kotak HR Jangkar. Kecepatan jangkar tidak ikut dinaikkan karena fungsinya sebagai pembanding.\n• Blok Z2: mulai ±6,0 km/jam (10:00/km), sesuaikan 5,8–6,3 km/jam agar HR tenang di 140–148 bpm (rentang Z2 138–152) dan lulus talk test.\n• Strides 3 × [20 dtk cepat + 40 dtk jalan]: ±1,5–2 km/jam di atas kecepatan tempo (saat ini ±9,0–10,0 km/jam, ±6:40–6:00/km); cepat tapi rileks, cadence tinggi ±170 langkah/menit, RPE ±7, bukan sprint. Mulai dari batas bawah kecepatan.\n• Tips strides: tekan tombol naik ±4 detik sebelum segmen 20 detik dimulai agar sabuk treadmill sempat berakselerasi.\n• Kriteria berhasil: (1) HR stabil di Z2 tanpa merayap ke Z3 selama blok Z2 — bila di 6,0 km/jam HR masih < 138 bpm, naikkan bertahap sampai 6,3 km/jam (tanda kebugaran membaik). (2) Beban × repetisi RDL dan Goblet Squat di RIR 3 tidak turun dibanding pekan sebelumnya.\n• Rencana cadangan: bila RDL turun satu tahap dua pekan berturut-turut, blok Z2 dipendekkan menjadi 10 menit. Bila HR tetap kacau walau kaki segar, cek sensor (hitung nadi manual 15 detik × 4 di menit ke-5; jam terpasang pas 1–2 jari di atas tulang pergelangan; tangan lepas dari handrail) dan kecukupan minum, bukan urutan sesi.\n• Pekan pertama pengguna baru: jangkar 4 mnt + 15 mnt Z2 + 1 mnt jalan, tanpa strides.',
+          guide: (isV4(p) ? '• Sebelum lari: Rutin Pemanasan 7 Gerakan (±2,5 mnt). Total Selasa ±25 mnt (Rutin + Lari 1) + ±37 mnt (Lower).\n' : '') + '• Jangkar 4 menit (F.2): 00:00–01:00 jalan 4,8 km/jam → 01:00–04:00 jog 5,5 km/jam. Catat HR menit ke-4 di kotak HR Jangkar. Kecepatan jangkar tidak ikut dinaikkan karena fungsinya sebagai pembanding.\n• Blok Z2: mulai ±6,0 km/jam (10:00/km), sesuaikan 5,8–6,3 km/jam agar HR tenang di 140–148 bpm (rentang Z2 138–152) dan lulus talk test.\n• Strides 3 × [20 dtk cepat + 40 dtk jalan]: ±1,5–2 km/jam di atas kecepatan tempo (saat ini ±9,0–10,0 km/jam, ±6:40–6:00/km); cepat tapi rileks, cadence tinggi ±170 langkah/menit, RPE ±7, bukan sprint. Mulai dari batas bawah kecepatan.\n• Tips strides: tekan tombol naik ±4 detik sebelum segmen 20 detik dimulai agar sabuk treadmill sempat berakselerasi.\n• Kriteria berhasil: (1) HR stabil di Z2 tanpa merayap ke Z3 selama blok Z2 — bila di 6,0 km/jam HR masih < 138 bpm, naikkan bertahap sampai 6,3 km/jam (tanda kebugaran membaik). (2) Beban × repetisi RDL dan Goblet Squat di RIR 3 tidak turun dibanding pekan sebelumnya.\n• Rencana cadangan: bila RDL turun satu tahap dua pekan berturut-turut, blok Z2 dipendekkan menjadi 10 menit. Bila HR tetap kacau walau kaki segar, cek sensor (hitung nadi manual 15 detik × 4 di menit ke-5; jam terpasang pas 1–2 jari di atas tulang pergelangan; tangan lepas dari handrail) dan kecukupan minum, bukan urutan sesi.\n• Pekan pertama pengguna baru: jangkar 4 mnt + 15 mnt Z2 + 1 mnt jalan, tanpa strides.',
           metrics: buildRunMetrics('run1', { min: totalMin, pace: '10:43', rpe: 4.5, anchor: true })
         };
       }
@@ -2476,11 +2775,14 @@
         const anchorRefText = prevSun !== null
           ? ` HR Jangkar Ahad lalu: <b>${prevSun} bpm</b> → batas drift <b>${prevSun + 8} bpm</b>.`
           : '';
-        const run2Guide = '• Prasyarat Tempo: Saklar Hijau, Gerbang DOMS 0–3, dan HR jangkar kurang dari +8 bpm dibanding Ahad sebelumnya.\n• Pemanasan: mobilitas pra-lari → jangkar 4 mnt → 2 mnt jog Z2 (±6,0 km/jam).\n• Inti: estimasi kecepatan Z3 saat ini ±7,5–8,0 km/jam (±8:00–7:30/km), RPE 6–7, HR 166 bpm sebagai pagar atas. Pemulihan antar-interval: jalan cepat atau jog santai 5,0–6,0 km/jam.\n• Kontrol: HR menembus 166 bpm atau napas mencapai RPE 8 → turunkan 0,2–0,3 km/jam. Di akhir interval HR masih < 152 bpm dan RPE ≤ 5 → naikkan 0,2–0,3 km/jam di interval berikutnya.\n• Sensor optik pergelangan bisa tertinggal beberapa puluh detik saat kecepatan berubah; pada interval, kecepatan dan RPE menjadi kemudi utama.\n• Pendinginan: 4–5 mnt jog pelan menuju jalan (5,5 → 4,5 km/jam), lalu pendinginan lower (D.3).\n• W7: boleh dilakukan di outdoor pada rute datar; kemudi RPE + HR, pace jam sebagai acuan.\n• Tahapan: W0 3 × [3 mnt Z3 + 90 dtk] · W1–W2 4 × [3 mnt + 90 dtk] · W3–W4 3 × [5 mnt + 2 mnt jog] · W5–W6 2 × [8 mnt + 2 mnt jog] (W5 Deload: Easy Z2 25 mnt) · W7 20 mnt non-stop · W8 Tes Pace-HR #3 (Jumat 18 Des).';
+        const run2Guide = '• Prasyarat Tempo: Saklar Hijau, Gerbang DOMS 0–3, dan HR jangkar kurang dari +8 bpm dibanding Ahad sebelumnya.\n' + (isV4(p)
+          ? '• Pemanasan (±40 mnt total sesi): Rutin 7 Gerakan → jangkar 4 mnt (catat HR menit ke-4) → jog Z2 5–6 mnt (±6,0 km/jam) → 2 × [15–20 dtk pick-up di ±8,5 km/jam + 40 dtk jalan] → interval dimulai ±1 menit kemudian. Pick-up hanya pada hari Tempo (W3–W7); tidak dipakai saat Easy Run pengganti (Kuning, Gerbang DOMS, HR Drift, Deload). Hari tes: Rutin 7 Gerakan lalu protokol tes apa adanya.\n'
+          : '• Pemanasan: mobilitas pra-lari → jangkar 4 mnt → 2 mnt jog Z2 (±6,0 km/jam).\n') + '• Inti: estimasi kecepatan Z3 saat ini ±7,5–8,0 km/jam (±8:00–7:30/km), RPE 6–7, HR 166 bpm sebagai pagar atas. Pemulihan antar-interval: jalan cepat atau jog santai 5,0–6,0 km/jam.\n• Kontrol: HR menembus 166 bpm atau napas mencapai RPE 8 → turunkan 0,2–0,3 km/jam. Di akhir interval HR masih < 152 bpm dan RPE ≤ 5 → naikkan 0,2–0,3 km/jam di interval berikutnya.\n• Sensor optik pergelangan bisa tertinggal beberapa puluh detik saat kecepatan berubah; pada interval, kecepatan dan RPE menjadi kemudi utama.\n• Pendinginan: 4–5 mnt jog pelan menuju jalan (5,5 → 4,5 km/jam), lalu pendinginan lower (D.3).\n• W7: boleh dilakukan di outdoor pada rute datar; kemudi RPE + HR, pace jam sebagai acuan.\n• Tahapan: W0 3 × [3 mnt Z3 + 90 dtk] · W1–W2 4 × [3 mnt + 90 dtk] · W3–W4 3 × [5 mnt + 2 mnt jog] · W5–W6 2 × [8 mnt + 2 mnt jog] (W5 Deload: Easy Z2 25 mnt) · W7 20 mnt non-stop · W8 Tes Pace-HR #3 (Jumat 18 Des).';
 
         if (doms.gate === 'red') {
           return {
             id: 'run2',
+            isWalk: true,
             title: '🛑 LARI 2 DIGANTI: Jalan Santai / Istirahat Penuh (DOMS ≥ 6)',
             warning: '🚨 Gerbang DOMS MERAH (skor ≥ 6): Tempo dibatalkan. Jalan santai 20–25 menit dengan HR < 130 bpm, atau istirahat penuh. Volume Lower Selasa depan dipangkas 50% (otomatis).',
             targetBadge: '20–25 Menit Jalan Santai',
@@ -2563,7 +2865,16 @@
         }
 
         const queue = getAnchorSegments();
-        queue.push({ label: 'Jog Z2 2 mnt', sec: 120, desc: '±6,0 km/jam (10:00/km)' });
+        if (isV4(p)) {
+          // V4.0 (D.1/F.4): jog Z2 5–6 mnt + 2 pick-up, interval dimulai ±1 menit kemudian
+          queue.push({ label: 'Jog Z2 5–6 mnt', sec: 300, desc: '±6,0 km/jam (10:00/km). Boleh tambah hingga 6 menit.' });
+          queue.push({ label: 'Pick-up #1/2 (15–20 dtk)', sec: 20, desc: '±8,5 km/jam, cepat tapi rileks — bukan sprint. Tekan tombol naik ±4 dtk sebelum segmen dimulai.' });
+          queue.push({ label: 'Jalan #1/2', sec: 40, desc: 'Jalan santai.' });
+          queue.push({ label: 'Pick-up #2/2 (15–20 dtk)', sec: 20, desc: '±8,5 km/jam, cepat tapi rileks.' });
+          queue.push({ label: 'Jalan → Interval ±1 mnt Lagi', sec: 60, desc: 'Jalan ±40 dtk, lalu naikkan kecepatan menuju Z3 (±7,5–8,0 km/jam).' });
+        } else {
+          queue.push({ label: 'Jog Z2 2 mnt', sec: 120, desc: '±6,0 km/jam (10:00/km)' });
+        }
         if (continuous) {
           queue.push({ label: 'Continuous Tempo Z3 Non-Stop (152–166 bpm, RPE 6–7)', sec: 1200, desc: '±7,5–8,0 km/jam (8:00–7:30/km). HR > 166 / RPE 8 → turunkan 0,2–0,3 km/jam.' + (p === 7 ? ' W7 boleh outdoor rute datar: kemudi RPE + HR, pace jam sebagai acuan.' : '') });
         } else {
@@ -2576,13 +2887,14 @@
 
         return {
           id: 'run2',
-          title: `LARI 2 (Jumat ≥ 14:00, Treadmill): ${stageTitle}`,
+          isTempo: true,
+          title: `LARI 2 (Jumat ≥ 14:00, Treadmill${isV4(p) ? ', ±40 Mnt' : ''}): ${stageTitle}`,
           warning: '🎯 Prasyarat: Saklar Hijau, Gerbang DOMS 0–3, HR Jangkar < +8 bpm dari Ahad lalu. Kemudi utama: kecepatan + RPE 6–7 (kalimat 3–4 kata); HR 166 bpm = pagar atas.' + anchorRefText,
-          targetBadge: start ? '~25 Menit Tempo Z3' : '~30 Menit Tempo Z3',
+          targetBadge: isV4(p) ? '~40 Menit (incl. Pemanasan)' : (start ? '~25 Menit Tempo Z3' : '~30 Menit Tempo Z3'),
           hrZoneBadge: 'Zona 3: 152–166 bpm',
           queue,
           guide: run2Guide,
-          metrics: buildRunMetrics('run2', { min: start ? 25 : 30, pace: '8:57', rpe: 6.5, anchor: true, hrLabel: 'Avg HR Z3 (bpm)' })
+          metrics: buildRunMetrics('run2', { min: isV4(p) ? 37 : (start ? 25 : 30), pace: '8:57', rpe: 6.5, anchor: true, hrLabel: 'Avg HR Z3 (bpm)' })
         };
       }
 
@@ -2602,7 +2914,7 @@
           });
           queue.push({ label: 'Z2 Konstan (138–152 bpm)', sec: Math.max(60, (totalMin - 23) * 60), desc: '±6,0 km/jam (5,8–6,3), lulus talk test. Setelah menit ke-30, bila HR merayap mendekati 152 bpm (cardiac drift), turunkan 0,2–0,3 km/jam.' });
         } else {
-          queue.push({ label: 'Z2 Outdoor Konstan (138–152 bpm)', sec: Math.max(60, (totalMin - 7) * 60), desc: 'Kemudi HR + talk test; pace jam hanya acuan (GPS bisa meleset di menit awal). Rute datar.' + (p === 7 ? ' Boleh dipotong menjadi 40 menit bila betis/tulang kering terasa.' : '') });
+          queue.push({ label: 'Z2 Outdoor Konstan (138–152 bpm)', sec: Math.max(60, (totalMin - 7) * 60), desc: '3–5 menit pertama lebih pelan. Kemudi HR + talk test; pace jam hanya acuan (GPS bisa meleset di menit awal). Rute datar.' + (p === 7 ? ' Boleh dipotong menjadi 40 menit bila betis/tulang kering terasa.' : '') });
         }
         queue.push({ label: 'Jalan Santai', sec: 180, desc: '4,5 km/jam → pendinginan lower (D.3).' });
 
@@ -2610,7 +2922,7 @@
         if (isTestWeek) {
           warning = `🎯 TES PACE-HR ${p === 0 ? 'W0' : '#2 (M4, Ahad 22 Nov)'}: menit 10–20 kunci tepat 6,0 km/jam (0%), status Hijau; catat Avg HR 10 menit di kotak Tes, lalu lanjutkan sisa Long Run.`;
         } else if (outdoor) {
-          warning = `🌳 Long Run OUTDOOR (adaptasi aspal): kemudi HR & talk test, rute datar, tanpa Blok Pantau.${p === 7 ? ' Boleh dipotong menjadi 40 menit bila betis atau tulang kering terasa.' : ' Ahad 20 Des menutup W8.'}`;
+          warning = `🌳 Long Run OUTDOOR (adaptasi aspal): 3–5 menit pertama lebih pelan; kemudi HR & talk test, rute datar, tanpa Blok Pantau.${p === 7 ? ' Boleh dipotong menjadi 40 menit bila betis atau tulang kering terasa.' : ' Ahad 20 Des menutup W8.'}`;
         } else {
           warning = `📊 Blok Pantau menit 10–20 @ 6,0 km/jam (treadmill) untuk membaca tren HR.${p === 5 ? ' Long Run ditahan 45 menit.' : ''}`;
         }
@@ -2619,12 +2931,12 @@
         return {
           id: 'run3',
           isTestWeek,
-          title: `LARI 3 (Ahad): Long Run Zona 2 — Target ${totalMin} Menit${outdoor ? ' (Outdoor)' : ''}`,
+          title: `LARI 3 (Ahad): Long Run Zona 2 — Target ${totalMin} Menit${outdoor ? ' (Outdoor)' : ''}${isV4Day(p, 'sun') ? ' + Rutin 7 Gerakan' : ''}`,
           warning,
           targetBadge: `${totalMin} Menit Long Run`,
           hrZoneBadge: 'Zona 2: 138–152 bpm',
           queue,
-          guide: '• Durasi: W3 42 · W4 45 (Tes #2) · W5 45 (ditahan) · W6 48 · W7 50 outdoor (boleh dipotong 40 bila betis/tulang kering terasa) · W8 (Ahad 20 Des) 50 outdoor. Acuan awal: W0 35 · W1 38 · W2 40 menit.\n• Segmen treadmill (W3–W6): 0–4 jangkar (catat HR menit ke-4 sebagai pembanding Saklar HR Drift Jumat) → 4–10 Z2 di ±6,0 km/jam → 10–20 Blok Pantau: kunci 6,0 km/jam (±10:00/km), catat Avg HR 10 menit (dilakukan setiap Ahad di treadmill untuk membaca tren) → 20–akhir Z2 konstan ±6,0 (sesuaikan 5,8–6,3), lulus talk test → 3 mnt terakhir jalan santai 4,5 km/jam, lalu pendinginan lower.\n• Cardiac drift = kenaikan HR bertahap pada lari konstan yang lama. Setelah menit ke-30, bila HR merayap mendekati 152 bpm, turunkan 0,2–0,3 km/jam.\n• Outdoor (W7–W8): kemudi HR dan talk test; pace jam hanya acuan karena GPS bisa meleset di menit awal; pilih rute datar; tanpa Blok Pantau.\n• Membaca hasil: HR latihan bervariasi harian ±3% (±4 bpm). Penurunan 4–6 bpm di satu tes adalah sinyal awal; dianggap nyata bila konsisten di Blok Pantau beberapa Ahad.',
+          guide: (isV4Day(p, 'sun') ? '• Pemanasan: Rutin 7 Gerakan (D.1), lalu jangkar 4 mnt (menit 0–4). Outdoor (W7–W8): 3–5 menit pertama lebih pelan. Hari tes (Ahad 22 Nov): Rutin 7 Gerakan lalu protokol tes apa adanya.\n' : '') + '• Durasi: W3 42 · W4 45 (Tes #2) · W5 45 (ditahan) · W6 48 · W7 50 outdoor (boleh dipotong 40 bila betis/tulang kering terasa) · W8 (Ahad 20 Des) 50 outdoor. Acuan awal: W0 35 · W1 38 · W2 40 menit.\n• Segmen treadmill (W3–W6): 0–4 jangkar (catat HR menit ke-4 sebagai pembanding Saklar HR Drift Jumat) → 4–10 Z2 di ±6,0 km/jam → 10–20 Blok Pantau: kunci 6,0 km/jam (±10:00/km), catat Avg HR 10 menit (dilakukan setiap Ahad di treadmill untuk membaca tren) → 20–akhir Z2 konstan ±6,0 (sesuaikan 5,8–6,3), lulus talk test → 3 mnt terakhir jalan santai 4,5 km/jam, lalu pendinginan lower.\n• Cardiac drift = kenaikan HR bertahap pada lari konstan yang lama. Setelah menit ke-30, bila HR merayap mendekati 152 bpm, turunkan 0,2–0,3 km/jam.\n• Outdoor (W7–W8): kemudi HR dan talk test; pace jam hanya acuan karena GPS bisa meleset di menit awal; pilih rute datar; tanpa Blok Pantau.\n• Membaca hasil: HR latihan bervariasi harian ±3% (±4 bpm). Penurunan 4–6 bpm di satu tes adalah sinyal awal; dianggap nyata bila konsisten di Blok Pantau beberapa Ahad.',
           metrics: buildRunMetrics('run3', { min: totalMin, pace: '10:20', rpe: 5.0, anchor: true, block: !outdoor && !isTestWeek, test: isTestWeek, hrLabel: 'Avg HR Z2 (bpm)' })
         };
       }
@@ -2633,7 +2945,7 @@
     }
 
     /* =========================================================================
-       7. INSIGHT TAB — MODUL PANDUAN BLUEPRINT AEROFRAME V3.0
+       7. INSIGHT TAB — MODUL PANDUAN BLUEPRINT AEROFRAME V4.0
        ========================================================================= */
     const INSIGHT_MODULES = [
       {
@@ -2642,10 +2954,10 @@
           '• <b>Posisi:</b> AEROFRAME adalah program hybrid dengan <b>lari sebagai prioritas utama</b>. Upper body diarahkan ke pembentukan otot (estetika), lower body ke penunjang lari dan kapasitas angkat fungsional. Fase gym berfungsi sebagai akselerator sampai 19 Desember 2026; setelah itu program berlanjut ke fase kalistenik (dokumen terpisah), sehingga kapasitas dasarnya (tarik vertikal, dorong, grip, core, dan membawa beban) disiapkan sejak sekarang.',
           '• <b>Profil & Data:</b> Pria 165 cm · BB 54 kg → target 55 kg (massa otot bersih & proporsional) · HRmax 193 bpm (estimasi pengaturan jam) · RHR baseline 56 bpm (rata-rata 7 pagi) · HRR 137 bpm · VO2max jam W0: 41 mL/kg/mnt. Zona HR mengikuti pengaturan Huawei Watch Fit 4 Pro (metode HRR). Fasilitas: gym 24 jam (tutup Jumat dini hari, buka lagi Jumat 14:00), karet resistance merah (15–35 lbs), jalur lari outdoor.',
           '• <b>Tujuan 1 — Pace lari:</b> kecepatan pada HR 145–150 bpm naik ≥ 0,5 km/jam, atau HR rata-rata di 6,0 km/jam turun ≥ 4–6 bpm secara konsisten.',
-          '• <b>Tujuan 2 — Adaptasi aerobik & mitokondria:</b> volume lari ±90–105 menit/pekan dengan mayoritas waktu di Z1–Z2.',
+          '• <b>Tujuan 2 — Adaptasi aerobik & mitokondria:</b> volume lari ±95–110 menit/pekan dengan mayoritas waktu di Z1–Z2.',
           '• <b>Tujuan 3 — VO2max:</b> skor jam naik ±2–4 mL/kg/mnt dalam 8 pekan (menuju 43–45), dibaca sebagai tren karena estimasi jam memiliki galat.',
           '• <b>Tujuan 4 — Running economy & ketahanan tungkai:</b> strides, pogo hops, kapasitas betis (gastrocnemius & soleus), dan prehab engkel 3 arah berjalan rutin tanpa nyeri tulang kering atau lutut.',
-          '• <b>Tujuan 5 — Rantai posterior & angkat fungsional:</b> RDL dan goblet squat di RIR 3 dengan hip hinge dan bracing yang aman; kebutuhan angkat harian (galon 19–20 kg) terlampaui.',
+          '• <b>Tujuan 5 — Rantai posterior & angkat-bawa fungsional:</b> RDL & Goblet Squat di RIR 3 dengan hip hinge dan bracing yang aman; membawa beban asimetris setara satu galon (20 kg) di satu tangan sejauh 35 langkah per sisi (Suitcase Carry); memeluk beban ±20 kg di depan badan sejauh 40 langkah (Plate Bear-Hug Carry).',
           '• <b>Tujuan 6 — Estetika upper (V-taper) & lengan:</b> dada atas, bahu samping, punggung, lengan atas (triceps), dan lengan bawah terisi; pola tarik vertikal berkembang menuju pull-up.',
           '• <b>Tujuan 7 — Postur:</b> posisi kepala-leher (sudut kraniovertebral) dan bahu lebih tegak. Indikator tubuh: rata-rata BB mingguan 54 → 55 kg.',
           '• <b>Prinsip Desain:</b> (1) Konsistensi lebih penting daripada intensitas. (2) Minimal tapi representatif — setiap gerakan punya fungsi berbeda. (3) Senin & Kamis (puasa) selalu menjadi hari teringan. (4) Autoregulasi — RIR, Saklar Kesiapan, dan Gerbang DOMS mengatur dosis harian; angka gerbang adalah aturan praktis (heuristik) dari data sendiri, bukan ambang klinis. (5) Berbasis data — perubahan program diputuskan dari data latihan (beban, repetisi, RIR, respons pegal, kualitas lari), bukan preferensi sesaat.'
@@ -2677,10 +2989,10 @@
       {
         title: '🗓️ 4. Arsitektur Mingguan, Kalender W3–W8, Gerbang & Protokol Mulai/Kembali',
         items: [
-          '• <b>Matriks:</b> Senin istirahat (puasa) + Modul Postur & Prehab Engkel (±11 mnt, kamar) · Selasa <b>LARI 1</b> (Easy Z2 + strides, ±22 mnt) → <b>GYM LOWER</b> (±35 mnt) · Rabu <b>GYM UPPER A</b> (±50 mnt) · Kamis istirahat (puasa) + Modul + <b>Gerbang DOMS</b> · Jumat <b>LARI 2</b> Tempo Z3 (≥ 14:00, ±30 mnt) · Sabtu <b>GYM UPPER B</b> (±48 mnt) · Ahad <b>LARI 3</b> Long Run Z2 (42–50 mnt).',
-          '• <b>Alasan penempatan:</b> Lari 1 dikerjakan dengan kaki segar sehingga kualitasnya terjaga; seluruh beban kaki dikonsolidasikan di Selasa; jeda ±72 jam menuju Tempo Jumat. Rabu: dada atas, punggung (pulldown), bahu, lengan atas & lengan bawah; kaki beristirahat. Sabtu: assisted pull-up, punggung tengah, dada, bahu, lengan; hari bebas lari sebelum Long Run. Ahad: kaki segar karena Sabtu tidak melatih kaki.',
-          '• <b>Kalender:</b> W0 Pekan Adaptasi 20–25 Okt (selesai) · W1–W2 26 Okt–8 Nov · <b>V3.0 berlaku W3–W8: 9 Nov–20 Des 2026</b>. Perubahan Upper B (Assisted Pull-Up menggantikan Negative Pull-Up) diterapkan sejak Sabtu, 7 Nov 2026.',
-          '• <b>W3 (9–15 Nov):</b> V3.0 berlaku penuh. RDL boleh naik ke 3 set bila Gerbang DOMS ≤ 3. Tempo 3 × 5 mnt. Long Run 42 mnt. · <b>W4 (16–22 Nov):</b> Evaluasi Tengah M4. Pogo hops dimulai bila DOMS ≤ 3. Uji Strict Pull-Up Sabtu 21 Nov hanya bila gerbang lolos. Tes Pace-HR #2: Ahad 22 Nov. Antropometri & foto. · <b>W5 (23–29 Nov):</b> opsi Deload (aktifkan bila akhir W4 terasa jenuh atau sendi terasa berat). Tempo 2 × 8 mnt (atau Easy Z2 25 mnt bila deload). Long Run ditahan 45 mnt.',
+          '• <b>Matriks:</b> Senin istirahat (puasa) + Modul Postur & Prehab Engkel (±11 mnt, kamar) · Selasa <b>LARI 1</b> (Easy Z2 + strides) → <b>GYM LOWER</b>: ±25 mnt (Rutin + Lari 1) + ±37 mnt (Lower) · Rabu <b>GYM UPPER A</b> (±53 mnt) · Kamis istirahat (puasa) + Modul + <b>Gerbang DOMS</b> · Jumat <b>LARI 2</b> Tempo Z3 (≥ 14:00, ±40 mnt) · Sabtu <b>GYM UPPER B</b> (±55 mnt) · Ahad <b>LARI 3</b> Long Run Z2 (42–50 mnt + Rutin 7 Gerakan).',
+          '• <b>Alasan penempatan:</b> Lari 1 dikerjakan dengan kaki segar sehingga kualitasnya terjaga; seluruh beban kaki dan carry asimetris dikonsolidasikan di satu hari (Selasa); jeda ±72 jam menuju Tempo Jumat. Rabu: dada atas, punggung (pulldown), bahu, lengan atas & lengan bawah; kaki beristirahat. Sabtu: assisted pull-up, punggung tengah, dada, carry depan, bahu, lengan; hari bebas lari sebelum Long Run. Ahad: kaki segar karena Sabtu tidak melatih kaki.',
+          '• <b>Kalender:</b> W0 Pekan Adaptasi 20–25 Okt (selesai) · W1–W2 26 Okt–8 Nov · <b>V4.0 berlaku W3–W8: 9 Nov–20 Des 2026</b>. Perubahan Upper B (Assisted Pull-Up menggantikan Negative Pull-Up) diterapkan sejak Sabtu, 7 Nov 2026; di aplikasi, V4.0 dimajukan mulai Sabtu, 7 Nov 2026 (Upper B V4.0 dengan Plate Bear-Hug Carry & Set 0 push-up biasa, serta Rutin 7 Gerakan di Sabtu & Ahad W2); Senin–Jumat mengikuti mulai W3.',
+          '• <b>W3 (9–15 Nov):</b> V4.0 berlaku penuh. RDL boleh naik ke 3 set bila Gerbang DOMS ≤ 3. Tempo 3 × 5 mnt. Long Run 42 mnt. · <b>W4 (16–22 Nov):</b> Evaluasi Tengah M4. Pogo hops dimulai bila DOMS ≤ 3. Uji Strict Pull-Up Sabtu 21 Nov hanya bila gerbang lolos. Tes Pace-HR #2: Ahad 22 Nov. Antropometri & foto. · <b>W5 (23–29 Nov):</b> opsi Deload (aktifkan bila akhir W4 terasa jenuh atau sendi terasa berat). Tempo 2 × 8 mnt (atau Easy Z2 25 mnt bila deload). Long Run ditahan 45 mnt.',
           '• <b>W6 (30 Nov–6 Des):</b> Tempo 2 × 8 mnt. Long Run 48 mnt. · <b>W7 (7–13 Des):</b> Tempo kontinu 20 mnt. Adaptasi aspal: Long Run Ahad 13 Des di outdoor. · <b>W8 (14–20 Des):</b> Evaluasi Akhir M8. Tes Pace-HR #3: Jumat 18 Des (menggantikan Tempo). Sesi gym terakhir Sabtu 19 Des (uji Strict Pull-Up bila gerbang lolos). Long Run outdoor Ahad 20 Des. Antropometri & foto.',
           '• <b>Gerbang DOMS (Kamis)</b> — skor pegal hamstring/betis saat turun tangga (0–10): <b>0–3</b> → Tempo Jumat normal; kenaikan RDL dari 2 ke 3 set (W3+) dan pogo hops (W4+) diizinkan. <b>4–5</b> → Jumat diganti Easy Run Z2 konstan 25–30 mnt; Selasa berikutnya kurangi 1 set RDL dan 1 set Calf Raise. <b>≥ 6</b> → Jumat diganti jalan santai 20–25 mnt (HR < 130 bpm) atau istirahat penuh; volume Lower Selasa berikutnya dipangkas 50%. (Aplikasi menerapkan penyesuaian Selasa secara otomatis dari skor Kamis pekan lalu.)',
           '• <b>Saklar HR Drift (Jumat):</b> setelah jangkar 4 menit standar, bandingkan HR menit ke-4 dengan HR jangkar Ahad sebelumnya. Bila lebih tinggi ≥ 8 bpm → Tempo diganti Easy Run Z2 25 mnt. Selisih 8 bpm kira-kira dua kali variasi harian HR latihan (±3%; Buchheit, 2014), sehingga layak dipakai sebagai alarm. Keduanya aturan praktis yang dikalibrasi dari data sendiri — yang paling informatif adalah tren beberapa pekan, bukan satu angka.',
@@ -2689,10 +3001,23 @@
         ]
       },
       {
-        title: '🏋️ 5. Aturan Eksekusi, Kategori Tempo, Progresi Beban & Volume',
+        title: '🔥 5. Pemanasan, Set 0 & Pendinginan (Rutin 7 Gerakan)',
+        items: [
+          '• <b>Rutin Pemanasan 7 Gerakan</b> (±2,5 menit, berdiri, boleh berpegangan ke treadmill, tanpa alat): (1) arm circles 10× ke depan & 10× ke belakang, dari putaran kecil ke besar; (2) chest hugs — peluk badan sendiri lalu buka lengan lebar, 10×; (3) W squeeze — siku menekuk 90° di samping badan, tarik siku turun & ke belakang sambil memutar lengan bawah keluar sampai belikat terjepit (huruf W), tahan 1 detik, 10×; (4) torso twists 10×; (5) leg swings depan-belakang 10×/kaki; (6) leg swings samping 8×/kaki; (7) calf-ankle rockers 10×. Dipakai di setiap sesi gym dan lari (checklist di kartu pemanasan).',
+          '• <b>Rabu & Sabtu (gym upper):</b> jalan cepat treadmill 4–5 mnt (boleh incline 3–5%) sampai napas sedikit naik & badan terasa hangat — ambil batas atas bila latihan pagi atau ruangan dingin → Rutin 7 Gerakan → Set 0.',
+          '• <b>Selasa (lari → lower):</b> Rutin 7 Gerakan → Lari 1 (sekaligus pemanasan umum) → W4+ (bila DOMS ≤ 3) Ankle Pogo Hops CEPAT 2 × 10 pantulan, rest 30 dtk → Set 0 RDL. Jaga jeda dari akhir lari ke RDL tetap singkat.',
+          '• <b>Jumat (Tempo):</b> Rutin 7 Gerakan → jangkar 4 mnt (catat HR menit ke-4) → jog Z2 5–6 mnt (±6,0 km/jam) → 2 × [15–20 dtk pick-up di ±8,5 km/jam + 40 dtk jalan] → interval dimulai ±1 menit kemudian. Pick-up hanya pada hari Tempo (W3–W7); tidak dipakai saat Easy Run pengganti (Kuning, Gerbang DOMS, HR Drift, Deload). <b>Hari Tes Pace-HR</b> (Ahad 22 Nov & Jumat 18 Des): Rutin 7 Gerakan, lalu protokol tes apa adanya (tanpa perpanjangan jog dan pick-up). <b>Ahad (Long Run):</b> Rutin 7 Gerakan → jangkar 4 mnt → Long Run; outdoor (W7–W8) 3–5 menit pertama lebih pelan. <b>Senin & Kamis:</b> tanpa pemanasan terpisah.',
+          '• <b>Set 0 (set pemanasan spesifik):</b> RDL bar 20 kg × 8 (+ set ramp ±70% beban kerja × 3–5 rep bila beban kerja ≥ 40 kg; jauh dari gagal) · Goblet Squat: bodyweight squat × 5 (tahan bawah 2 dtk) · Incline DB Press: incline push-up × 6 · Lat Pulldown: ±50% beban kerja × 8 · Assisted Pull-Up: pin bantuan +15 kg dari pin kerja × 5 · Feet-Elevated Push-Up: push-up biasa × 5 (tempo santai). Set 0 tidak dihitung sebagai set kerja dan tidak dipotong saat Kuning maupun Deload; Seated Cable Row tidak memakai Set 0.',
+          '• <b>Pendinginan setelah upper</b> (Rabu & Sabtu): jalan santai 60–90 dtk hingga HR < 120 bpm → doorway chest stretch + overhead lat/triceps stretch 30 dtk → napas 4-6 (3–4×). <b>Setelah lower & lari</b> (Selasa, Jumat, Ahad): jalan 2 mnt di 4,0–4,5 km/jam hingga HR < 120 bpm → standing calf stretch, <b>half-kneeling hip flexor stretch</b>, dan hamstring stretch, masing-masing 30 dtk/kaki → napas 4-6.',
+          '• <b>Half-Kneeling Hip Flexor Stretch</b> (30 dtk per sisi): berlutut satu kaki seperti posisi lunge (pakai alas lutut bila ada); gulung panggul ke belakang (posterior pelvic tilt: tulang ekor diarahkan ke bawah) dan kencangkan bokong kaki yang berlutut; dorong pinggul sedikit ke depan sampai terasa regangan di depan pinggul kaki belakang. Otot: iliopsoas & rectus femoris, sekaligus mengaktifkan gluteus maximus sisi yang sama. Tanda salah: terasa di pinggang, atau punggung bawah melengkung (panggul belum digulung).',
+          '• <b>Dasar:</b> kombinasi pemanasan umum dan set pemanasan spesifik menghasilkan performa kekuatan lebih tinggi daripada set pemanasan saja (Abad dkk., 2011); pemanasan efektif menaikkan suhu otot tanpa membuat lelah (Bishop, 2003). Peregangan hip flexor harian selama 6 pekan menambah panjang hip flexor (Ehresman dkk., 2025; studi kecil).'
+        ]
+      },
+      {
+        title: '🏋️ 6. Aturan Eksekusi, Kategori Tempo, Progresi Beban & Volume',
         items: [
           '• <b>RIR 2–3 tanpa failure.</b> RIR (reps in reserve) adalah jumlah repetisi yang masih sanggup dilakukan dengan teknik bersih saat set dihentikan. Sesi Lower: <b>RIR 3 ketat</b>.',
-          "• <b>Genggaman anti-jepit:</b> untuk gerakan tarik dan tenteng (Lat Pulldown, Assisted Pull-Up, Seated Row, RDL, Farmer's Walk, Dead Hang), kaitkan batang/gagang di lipatan pangkal jari agar kulit telapak tidak terjepit. Untuk gerakan dorong (Incline Press, Overhead Press, Push-Up), genggam penuh di pangkal telapak.",
+          "• <b>Genggaman anti-jepit:</b> untuk gerakan tarik dan tenteng (Lat Pulldown, Assisted Pull-Up, Seated Row, RDL, Suitcase Carry, Dead Hang), kaitkan batang/gagang di lipatan pangkal jari agar kulit telapak tidak terjepit. Untuk gerakan dorong (Incline Press, Overhead Press, Push-Up), genggam penuh di pangkal telapak. Plate Bear-Hug Carry tidak memakai genggaman jari.",
           '• <b>Napas:</b> RDL, squat, dan lunge memakai bracing 360° (perut dikencangkan melingkar; tarik napas saat turun, buang saat naik, tanpa menahan napas lama). Gerakan dorong/tarik: tarik napas saat fase memanjang (eksentrik), buang saat mengerahkan tenaga. Carry: Breathe Behind the Shield, yaitu perut tetap kencang dengan napas pendek yang ritmis.',
           '• <b>Pencatatan per set:</b> beban, repetisi, dan RIR; Set 0 dicatat terpisah (di aplikasi: beban & repetisi per set; RIR dijaga sesuai target di kartu). Kolom "Awal (W0)" adalah titik awal program; setiap pengguna melanjutkan dari log masing-masing.',
           '• <b>KONTROL</b> (gerakan compound): turun ±2 detik, naik tegas tanpa menyentak, tanpa memantul. Perhatian ke teknik ("dorong lantai", "siku ke saku belakang"), bukan ke rasa otot. Memperlambat compound tidak menambah stimulus, hanya mengurangi beban yang bisa dipakai.',
@@ -2702,33 +3027,33 @@
           '• <b>Progresi 3 — Kunci beban baru</b> setelah mampu ≥ 8 repetisi bersih di semua set dengan DB baru.',
           '• <b>Kabel/mesin:</b> naik 1 pin setelah batas atas repetisi tercapai di 2 sesi berurutan; bila lompatan pin terlalu berat, tahan pin dan perlambat fase kembali menjadi 4 detik. <b>Barbell RDL:</b> naik 2,5 kg (1,25 kg per sisi) setelah semua set mencapai 10 repetisi di RIR 3 dan skor DOMS Kamis ≤ 3. <b>Assisted Pull-Up:</b> progresi terbalik (pin diturunkan). Progres tidak harus berupa kenaikan beban setiap pekan; tambahan repetisi dengan kontrol lebih baik di beban yang sama juga merupakan progres.',
           '• <b>Gerbang Negative Pull-Up & Uji Strict (E.7):</b> Negative ditunda selama Assisted belum mencapai gerbang. Di level kekuatan awal, beban yang diturunkan saat negative diperkirakan berada di ±70–100% kapasitas eksentrik maksimal (kapasitas eksentrik ±46% di atas konsentrik pada tarik vertikal; Hollander dkk., 2007), sehingga repetisi lambat yang berulang menimbulkan kerusakan otot besar dan risiko strain. <b>Gerbang masuk:</b> Assisted 3 × 8 di RIR 2 pada pin ≤ ±15 kg, dua sesi berurutan. <b>Dosis kembali:</b> setelah set Assisted terakhir, 2 set × 2–3 rep; naik dari pijakan, turun 3–4 detik, RIR ≥ 3, rest 90–120 dtk. <b>Batas:</b> berhenti di repetisi pertama yang turunnya mulai cepat; tanpa set ke-3 dan tanpa repetisi tambahan. <b>Progresi:</b> hanya lewat repetisi (2 → 3 → 4), durasi turun tetap 3–4 detik. <b>Uji Strict:</b> bila Assisted sudah mencapai pin ±10–12,5 kg untuk 3 × 8, coba 1 kali di sesi evaluasi (Sabtu 21 Nov atau 19 Des) setelah Set 0 dan 1 set assisted ringan; catat hasilnya (0/1/2); tidak dilatih sampai gagal. (Kartu Negative & Uji Strict muncul otomatis di Sabtu saat gerbang lolos.)',
-          '• <b>Volume mingguan (set kerja langsung):</b> Dada atas 6 (Incline 3 + Feet-Elevated Push-Up 3) · Tarik vertikal 6 (Lat Pulldown 3 + Assisted 3) · Tarik horizontal 3 (Seated Row; + Face Pull 5) · Dorong vertikal 3 (OHP) · Bahu samping 6 (Lateral 3 + 3) · Bahu belakang & rotator eksternal 5 (Face Pull 3 + 2) · Triceps 2 (Overhead Cable Ext; + 9 set gerakan dorong) · Lengan bawah & brachioradialis 11 (Hammer 3 + 3, Wrist 2 + 2, Dead Hang 1) · Kaki & carry 12–13 (RDL 2–3, Goblet 2, Lunge 2, Calf 3, Farmer 3). <b>Total 54–55 set/pekan:</b> Lower 12–13 · Upper A 22 · Upper B 20.'
+          '• <b>Volume mingguan (set kerja langsung):</b> Dada atas 6 (Incline 3 + Feet-Elevated Push-Up 3) · Tarik vertikal 6 (Lat Pulldown 3 + Assisted 3) · Tarik horizontal 3 (Seated Row; + Face Pull 5) · Dorong vertikal 3 (OHP) · Bahu samping 6 (Lateral 3 + 3) · Bahu belakang & rotator eksternal 5 (Face Pull 3 + 2) · Triceps 2 (Overhead Cable Ext; + 9 set gerakan dorong) · Lengan bawah & brachioradialis 11 (Hammer 3 + 3, Wrist 2 + 2, Dead Hang 1) · Kaki 9–10 (RDL 2–3, Goblet 2, Lunge 2, Calf 3) · Carry 5 (Suitcase Carry 3 putaran per sisi + Plate Bear-Hug Carry 2 putaran). <b>Total 56–57 set/pekan:</b> Lower 12–13 · Upper A 22 · Upper B 22.'
         ]
       },
       {
-        title: '⌚ 6. Program Lari: Zona HR (HRR), Jangkar 4 Menit, Lari 1/2/3 & Tes Pace-HR',
+        title: '⌚ 7. Program Lari: Zona HR (HRR), Jangkar 4 Menit, Lari 1/2/3 & Tes Pace-HR',
         items: [
           '• <b>Zona</b> (Huawei Watch Fit 4 Pro, metode HRR; HRmax 193, RHR 56): <b>Z1</b> 50–60% HRR = 125–138 bpm — pemanasan, jalan cepat, pemulihan antar-interval; RPE 2–3; ±4,8–5,5 km/jam · <b>Z2</b> 60–70% = 138–152 bpm — aerobik dasar (Lari 1, Long Run); lulus talk test kalimat utuh; RPE 3–4; <b>±6,0 km/jam (±10:00/km)</b> · <b>Z3</b> 70–80% = 152–166 bpm — Tempo Jumat; keras tapi terkendali, 3–4 kata; RPE 6–7; <b>±7,5–8,0 km/jam (±8:00–7:30/km)</b> · <b>Z4</b> 80–90% = 166–179 bpm — hanya tersentuh sekilas di ujung strides; RPE 8–9 · <b>Z5</b> 90–100% = 179–193 bpm — tidak dipakai di fase ini.',
           '• Bila pembulatan di aplikasi jam berbeda ±1 bpm, ikuti angka di aplikasi. HRmax adalah nilai estimasi; perbarui bila jam mencatat HR maksimal valid yang lebih tinggi. Estimasi kecepatan = kondisi normal (kaki segar) per November 2026 dan akan naik seiring adaptasi. <b>Kemudi tetap HR dan rasa napas; kecepatan mengikuti.</b> Catat angka bpm, bukan nama zona. Sensor optik pergelangan bisa tertinggal beberapa puluh detik saat kecepatan berubah; pada interval Jumat, kecepatan dan RPE menjadi kemudi utama, sedangkan 166 bpm menjadi pagar atas.',
           '• <b>Jangkar 4 Menit (standar semua sesi lari):</b> 00:00–01:00 jalan 4,8 km/jam → 01:00–04:00 jog 5,5 km/jam (±10:55/km). Catat HR di menit ke-4 pada kotak "HR Jangkar". Kecepatan jangkar tidak ikut dinaikkan walau kebugaran meningkat, karena fungsinya sebagai pembanding. HR jangkar yang turun dari pekan ke pekan menandakan adaptasi; yang melonjak menandakan kelelahan (Saklar HR Drift).',
-          '• <b>Lari 1 — Selasa, sebelum Lower (±20–23 mnt):</b> jangkar 4 mnt → Z2 konstan 12–15 mnt (mulai ±6,0 km/jam; sesuaikan 5,8–6,3; HR tenang 140–148 bpm) → strides 3 × [20 dtk cepat + 40 dtk jalan] (±1,5–2 km/jam di atas kecepatan tempo, saat ini ±9,0–10,0 km/jam; cadence ±170; RPE ±7; bukan sprint) → jalan transisi 1 mnt → mobilitas singkat & Lower; pendinginan lengkap setelah Lower.',
-          '• <b>Lari 2 — Jumat Tempo Z3 (≥ 14:00, treadmill, ±30 mnt):</b> prasyarat Saklar Hijau, Gerbang DOMS 0–3, dan HR jangkar < +8 bpm dari Ahad sebelumnya. Tahapan: W0 3 × [3 mnt Z3 + 90 dtk] · W1–W2 4 × [3 mnt + 90 dtk] · W3–W4 3 × [5 mnt + 2 mnt jog] · W5–W6 2 × [8 mnt + 2 mnt jog] · W7 20 mnt non-stop · W8 Tes Pace-HR #3.',
-          '• <b>Lari 3 — Ahad Long Run Z2:</b> W3 42 · W4 45 (Tes #2) · W5 45 (ditahan) · W6 48 · W7 50 outdoor (boleh dipotong 40 bila betis/tulang kering terasa) · W8 50 outdoor. Treadmill W3–W6: jangkar → Z2 → <b>Blok Pantau</b> menit 10–20 (kunci 6,0 km/jam, catat Avg HR 10 mnt) → Z2 konstan → 3 mnt jalan. Setelah menit ke-30, bila HR merayap mendekati 152 bpm (cardiac drift), turunkan 0,2–0,3 km/jam.',
-          '• <b>Tes Submaksimal Pace-HR:</b> titik resmi W0 (Ahad 25 Okt) · W4 (Ahad 22 Nov) · W8 (<b>Jumat 18 Des</b>; dipindah karena treadmill hanya tersedia sampai 19 Des). Syarat: status Hijau; treadmill dengan kemiringan sama (0%); waktu, makan, dan minum sebelum tes dibuat semirip mungkin. Cara: jangkar 4 mnt → 6 mnt Z2 di 6,0 km/jam → menit 10–20 kunci 6,0 km/jam, catat Avg HR 10 mnt. Membaca hasil: HR latihan memiliki variasi harian ±3% (±4 bpm; Buchheit, 2014); penurunan 4–6 bpm di satu tes adalah sinyal awal, dianggap nyata bila terlihat konsisten pada Blok Pantau beberapa Ahad.',
+          '• <b>Lari 1 — Selasa, sebelum Lower (±20–23 mnt + Rutin 7 Gerakan sebelumnya):</b> jangkar 4 mnt → Z2 konstan 12–15 mnt (mulai ±6,0 km/jam; sesuaikan 5,8–6,3; HR tenang 140–148 bpm) → strides 3 × [20 dtk cepat + 40 dtk jalan] (±1,5–2 km/jam di atas kecepatan tempo, saat ini ±9,0–10,0 km/jam; cadence ±170; RPE ±7; bukan sprint) → jalan transisi 1 mnt → Lower (W4+: pogo hops dulu); pendinginan lengkap setelah Lower.',
+          '• <b>Lari 2 — Jumat Tempo Z3 (≥ 14:00, treadmill, ±40 mnt):</b> prasyarat Saklar Hijau, Gerbang DOMS 0–3, dan HR jangkar < +8 bpm dari Ahad sebelumnya. Pemanasan: Rutin 7 Gerakan → jangkar 4 mnt → jog Z2 5–6 mnt → 2 × [15–20 dtk pick-up di ±8,5 km/jam + 40 dtk jalan] → interval ±1 menit kemudian (pick-up hanya hari Tempo W3–W7). Tahapan: W0 3 × [3 mnt Z3 + 90 dtk] · W1–W2 4 × [3 mnt + 90 dtk] · W3–W4 3 × [5 mnt + 2 mnt jog] · W5–W6 2 × [8 mnt + 2 mnt jog] · W7 20 mnt non-stop · W8 Tes Pace-HR #3.',
+          '• <b>Lari 3 — Ahad Long Run Z2 (42–50 mnt + Rutin 7 Gerakan):</b> W3 42 · W4 45 (Tes #2) · W5 45 (ditahan) · W6 48 · W7 50 outdoor (boleh dipotong 40 bila betis/tulang kering terasa) · W8 50 outdoor (3–5 menit pertama lebih pelan). Treadmill W3–W6: jangkar → Z2 → <b>Blok Pantau</b> menit 10–20 (kunci 6,0 km/jam, catat Avg HR 10 mnt) → Z2 konstan → 3 mnt jalan. Setelah menit ke-30, bila HR merayap mendekati 152 bpm (cardiac drift), turunkan 0,2–0,3 km/jam.',
+          '• <b>Tes Submaksimal Pace-HR:</b> titik resmi W0 (Ahad 25 Okt) · W4 (Ahad 22 Nov) · W8 (<b>Jumat 18 Des</b>; dipindah karena treadmill hanya tersedia sampai 19 Des). Syarat: status Hijau; treadmill dengan kemiringan sama (0%); waktu, makan, dan minum sebelum tes dibuat semirip mungkin. Cara: Rutin 7 Gerakan → jangkar 4 mnt → 6 mnt Z2 di 6,0 km/jam → menit 10–20 kunci 6,0 km/jam, catat Avg HR 10 mnt. Membaca hasil: HR latihan memiliki variasi harian ±3% (±4 bpm; Buchheit, 2014); penurunan 4–6 bpm di satu tes adalah sinyal awal, dianggap nyata bila terlihat konsisten pada Blok Pantau beberapa Ahad.',
           '• <b>Pencatatan setiap sesi:</b> durasi · jarak · pace rata-rata · pace tercepat · Avg HR · Max HR · RPE (1–10) · <b>HR Jangkar menit ke-4</b>. Ahad dan hari tes: <b>Avg HR Blok Pantau 6,0 km/jam</b>.'
         ]
       },
       {
-        title: '📊 7. Pemantauan, Evaluasi M4/M8 & Target 19 Desember',
+        title: '📊 8. Pemantauan, Evaluasi M4/M8 & Target 19 Desember',
         items: [
           '• <b>Berat badan:</b> timbang 3× per pekan (Selasa, Jumat, Ahad) pagi setelah buang air kecil dengan pakaian minimal; gunakan rata-rata mingguan. Indikator 54 → 55 kg dengan laju ideal ±0,15–0,25 kg per pekan. Rata-rata mingguan yang stagnan 2–3 pekan berturut-turut menjadi sinyal untuk mengevaluasi asupan (di luar dokumen ini).',
           '• <b>Antropometri & foto (W0, M4, M8):</b> (1) lingkar lengan bawah terlebar, rileks (sepertiga atas lengan bawah, bukan di pergelangan); (2) lingkar lengan bawah terlebar saat menggenggam kuat; (3) <b>lingkar lengan atas</b>, rileks, di titik tengah antara bahu dan siku (baru, untuk memantau triceps); (4) lingkar bahu samping di titik terlebar; (5) lingkar dada sejajar puting di akhir embusan napas normal. Foto tampak depan, samping, dan belakang di tempat dan pencahayaan yang sama.',
           '• <b>Daftar evaluasi M4 (16–22 Nov) & M8 (14–20 Des):</b> Tes Pace-HR beserta tren Blok Pantau dan HR Jangkar · Master lift · Antropometri dan foto; rata-rata BB · Kesiapan kalistenik: pin Assisted (3 × 8, RIR 2), durasi Dead Hang, repetisi Feet-Elevated Push-Up, serta Negative/Strict Pull-Up bila gerbang lolos · Skor VO2max jam (tren) · Rekap status Saklar Kesiapan dan skor Gerbang DOMS selama 4 pekan. (Seluruhnya tersedia di tab Progress.)',
-          '• <b>Target 19 Des:</b> Incline 2 × 7,5 kg (3 × 8–10; bonus 2 × 10 kg) · Lat Pulldown 32–35 kg (3 × 8–10) · OHP 2 × 7,5 kg (3 × 8–10) · Assisted pin ≤ 15 kg (3 × 8) → gerbang Negative; bonus pin 10–12,5 kg → uji Strict · Seated Row 25–27 kg (3 × 10–12) · Feet-Elevated Push-Up +6–8 rep per set · Overhead Cable Triceps +1–2 pin · RDL bonus 60 kg (8–10 rep) · Goblet kunci 15 kg (2 × 10) · Hammer 2 × 5 kg penuh (3 × 8–10) · Dead Hang 45–60 dtk · Strict Pull-Up bonus 1–2 rep (diuji hanya bila gerbang lolos).'
+          '• <b>Target 19 Des:</b> Incline 2 × 7,5 kg (3 × 8–10; bonus 2 × 10 kg) · Lat Pulldown 32–35 kg (3 × 8–10) · OHP 2 × 7,5 kg (3 × 8–10) · Assisted pin ≤ 15 kg (3 × 8) → gerbang Negative; bonus pin 10–12,5 kg → uji Strict · Seated Row 25–27 kg (3 × 10–12) · Feet-Elevated Push-Up +6–8 rep per set · Overhead Cable Triceps +1–2 pin · RDL bonus 60 kg (8–10 rep) · Goblet kunci 15 kg (2 × 10) · Hammer 2 × 5 kg penuh (3 × 8–10) · Dead Hang 45–60 dtk · Suitcase Carry 20 kg per tangan × 35 langkah per sisi (bonus 22,5 kg) · Plate Bear-Hug Carry plate 20 kg × 40 langkah · Strict Pull-Up bonus 1–2 rep (diuji hanya bila gerbang lolos).'
         ]
       },
       {
-        title: '🏁 8. Penutup Fase Gym & Landasan Ilmiah',
+        title: '🏁 9. Penutup Fase Gym & Landasan Ilmiah',
         items: [
           '• <b>Sesi gym terakhir:</b> Sabtu, 19 Desember 2026. Long Run outdoor Ahad, 20 Desember menutup W8. Lari mulai dipindah ke outdoor sejak W7 untuk mengadaptasikan tendon Achilles dan tulang kering terhadap permukaan aspal secara bertahap.',
           '• <b>Program berikutnya (fase kalistenik)</b> disusun dalam dokumen terpisah. Bekal dari fase ini: tarik vertikal (pin Assisted; Negative/Strict Pull-Up bila gerbang lolos), dorong (Feet-Elevated Push-Up), grip (Dead Hang), core dan carry, serta basis aerobik.',
@@ -2737,6 +3062,8 @@
           '• Kelelahan akibat kardio bersifat lokal: repetisi latihan kaki turun setelah kardio tubuh bawah, sedangkan latihan tubuh atas tidak terpengaruh (Sporer & Wenger, 2003; Tan dkk., 2014).',
           '• Sebagian besar waktu lari berada di intensitas rendah, mengikuti pola distribusi intensitas pada atlet ketahanan (Seiler, 2010). Latihan kontinu maupun interval sama-sama terbukti menaikkan VO2max pada orang dewasa sehat (Milanović dkk., 2015). Z3 dipakai sebagai zona tempo; letak ambang laktat individu belum diukur.',
           '• Pada kecepatan lari rendah, otot betis (soleus & gastrocnemius) adalah penopang utama tubuh (Dorn dkk., 2012). Defisit daya tahan betis ditemukan pada atlet dengan nyeri tulang kering/MTSS (Madeley dkk., 2007).',
+          '• Carry satu tangan menuntut otot samping batang tubuh di sisi tangan kosong jauh lebih tinggi (external oblique ±47% kontraksi maksimal pada beban 30 kg, dibanding ±6% bila beban dibagi ke dua tangan) dan menaikkan kompresi tulang belakang dibanding beban yang dibagi dua (McGill dkk., 2013). Carry melatih kemampuan yang berbeda dari angkatan biasa (McGill dkk., 2009).',
+          '• Kombinasi pemanasan umum dan set pemanasan spesifik menghasilkan performa kekuatan lebih tinggi daripada set pemanasan saja (Abad dkk., 2011); pemanasan efektif menaikkan suhu otot tanpa membuat lelah (Bishop, 2003). Peregangan hip flexor harian selama 6 pekan menambah panjang hip flexor (Ehresman dkk., 2025; studi kecil).',
           '• Tempo repetisi 0,5–8 detik menghasilkan hipertrofi setara, sedangkan tempo sangat lambat (> 10 detik/rep) justru inferior (Schoenfeld dkk., 2015). Fokus internal ("menghayati" otot) menambah hipertrofi pada gerakan isolasi seperti curl, tetapi tidak pada quadriceps (Schoenfeld dkk., 2018), dan efeknya pada aktivasi otot hilang di beban berat ±80% 1RM (Calatayud dkk., 2016).',
           '• Pegal otot tertunda (DOMS) wajar muncul 12–24 jam setelah latihan eksentrik yang belum biasa, memuncak 24–72 jam, dan hilang dalam 5–7 hari. Sesi awal yang submaksimal sudah membentuk perlindungan untuk sesi berikutnya (repeated bout effect; Hody dkk., 2019).',
           '• Ekstensi triceps dengan lengan di atas kepala menghasilkan pertambahan volume triceps lebih besar daripada posisi lengan netral (Maeo dkk., 2023). Latihan terapeutik terbukti dapat memperbaiki sudut kraniovertebral pada postur kepala maju (Sheikhhoseini dkk., 2018).',
@@ -2744,28 +3071,33 @@
         ]
       },
       {
-        title: '📚 9. Referensi',
+        title: '📚 10. Referensi',
         items: [
-          '1. Buchheit, M. (2014). Monitoring training status with HR measures: do all roads lead to Rome? <i>Frontiers in Physiology</i>, 5, 73.',
-          '2. Calatayud, J., dkk. (2016). Importance of mind-muscle connection during progressive resistance training. <i>European Journal of Applied Physiology</i>.',
-          '3. Doma, K., & Deakin, G. B. (2013). The effects of strength training and endurance training order on running economy and performance. <i>Applied Physiology, Nutrition, and Metabolism</i>.',
-          '4. Dorn, T. W., Schache, A. G., & Pandy, M. G. (2012). Muscular strategy shift in human running: dependence of running speed on hip and ankle muscle performance. <i>Journal of Experimental Biology</i>.',
-          '5. Eddens, L., van Someren, K., & Howatson, G. (2018). The role of intra-session exercise sequence in the interference effect: a systematic review with meta-analysis. <i>Sports Medicine</i>.',
-          '6. Hody, S., Croisier, J.-L., Bury, T., Rogister, B., & Leprince, P. (2019). Eccentric muscle contractions: risks and benefits. <i>Frontiers in Physiology</i>, 10, 536.',
-          '7. Hollander, D. B., dkk. (2007). Maximal eccentric and concentric strength discrepancies between young men and women for dynamic resistance exercise. <i>Journal of Strength and Conditioning Research</i>.',
-          '8. Madeley, L. T., Munteanu, S. E., & Bonanno, D. R. (2007). Endurance of the ankle joint plantar flexor muscles in athletes with medial tibial stress syndrome: a case-control study. <i>Journal of Science and Medicine in Sport</i>.',
-          '9. Maeo, S., dkk. (2023). Triceps brachii hypertrophy is substantially greater after elbow extension training performed in the overhead versus neutral arm position. <i>European Journal of Sport Science</i>.',
-          '10. Milanović, Z., Sporiš, G., & Weston, M. (2015). Effectiveness of high-intensity interval training (HIT) and continuous endurance training for VO2max improvements: a systematic review and meta-analysis of controlled trials. <i>Sports Medicine</i>, 45(10), 1469–1481.',
-          '11. Murlasits, Z., Kneffel, Z., & Thalib, L. (2018). The physiological effects of concurrent strength and endurance training sequence: a systematic review and meta-analysis. <i>Journal of Sports Sciences</i>.',
-          '12. Relph, N., dkk. (2022). Running shoes for preventing lower limb running injuries in adults. <i>Cochrane Database of Systematic Reviews</i>.',
-          "13. Riebe, D., dkk. (2015). Updating ACSM's recommendations for exercise preparticipation health screening. <i>Medicine & Science in Sports & Exercise</i>, 47(11), 2473–2479.",
-          '14. Schoenfeld, B. J., Ogborn, D. I., & Krieger, J. W. (2015). Effect of repetition duration during resistance training on muscle hypertrophy: a systematic review and meta-analysis. <i>Sports Medicine</i>.',
-          '15. Schoenfeld, B. J., dkk. (2018). Differential effects of attentional focus strategies during long-term resistance training. <i>European Journal of Sport Science</i>.',
-          '16. Schumann, M., dkk. (2022). Compatibility of concurrent aerobic and strength training for skeletal muscle size and function: an updated systematic review and meta-analysis. <i>Sports Medicine</i>, 52(3), 601–612.',
-          '17. Seiler, S. (2010). What is best practice for training intensity and duration distribution in endurance athletes? <i>International Journal of Sports Physiology and Performance</i>, 5(3), 276–291.',
-          '18. Sheikhhoseini, R., dkk. (2018). Effectiveness of therapeutic exercise on forward head posture: a systematic review and meta-analysis. <i>Journal of Manipulative and Physiological Therapeutics</i>.',
-          '19. Sporer, B. C., & Wenger, H. A. (2003). Effects of aerobic exercise on strength performance following various periods of recovery. <i>Journal of Strength and Conditioning Research</i>.',
-          '20. Tan, J. G., Coburn, J. W., Brown, L. E., & Judelson, D. A. (2014). Effects of a single bout of lower-body aerobic exercise on muscle activation and performance during subsequent upper- and lower-body resistance exercise workouts. <i>Journal of Strength and Conditioning Research</i>.'
+          '1. Abad, C. C., dkk. (2011). Combination of general and specific warm-ups improves leg-press one repetition maximum compared with specific warm-up in trained individuals. <i>Journal of Strength and Conditioning Research</i>.',
+          '2. Bishop, D. (2003). Warm up II: performance changes following active warm up and how to structure the warm up. <i>Sports Medicine</i>.',
+          '3. Buchheit, M. (2014). Monitoring training status with HR measures: do all roads lead to Rome? <i>Frontiers in Physiology</i>, 5, 73.',
+          '4. Calatayud, J., dkk. (2016). Importance of mind-muscle connection during progressive resistance training. <i>European Journal of Applied Physiology</i>.',
+          '5. Doma, K., & Deakin, G. B. (2013). The effects of strength training and endurance training order on running economy and performance. <i>Applied Physiology, Nutrition, and Metabolism</i>.',
+          '6. Dorn, T. W., Schache, A. G., & Pandy, M. G. (2012). Muscular strategy shift in human running: dependence of running speed on hip and ankle muscle performance. <i>Journal of Experimental Biology</i>.',
+          '7. Eddens, L., van Someren, K., & Howatson, G. (2018). The role of intra-session exercise sequence in the interference effect: a systematic review with meta-analysis. <i>Sports Medicine</i>.',
+          '8. Ehresman, B. A., dkk. (2025). Improved hip flexibility and gluteal function following a daily lunge-and-reach stretching intervention. <i>International Journal of Sports Physical Therapy</i>.',
+          '9. Hody, S., Croisier, J.-L., Bury, T., Rogister, B., & Leprince, P. (2019). Eccentric muscle contractions: risks and benefits. <i>Frontiers in Physiology</i>, 10, 536.',
+          '10. Hollander, D. B., dkk. (2007). Maximal eccentric and concentric strength discrepancies between young men and women for dynamic resistance exercise. <i>Journal of Strength and Conditioning Research</i>.',
+          '11. Madeley, L. T., Munteanu, S. E., & Bonanno, D. R. (2007). Endurance of the ankle joint plantar flexor muscles in athletes with medial tibial stress syndrome: a case-control study. <i>Journal of Science and Medicine in Sport</i>.',
+          '12. Maeo, S., dkk. (2023). Triceps brachii hypertrophy is substantially greater after elbow extension training performed in the overhead versus neutral arm position. <i>European Journal of Sport Science</i>.',
+          '13. McGill, S. M., Marshall, L., & Andersen, J. (2013). Low back loads while walking and carrying: comparing the load carried in one hand or in both hands. <i>Ergonomics</i>.',
+          '14. McGill, S. M., McDermott, A., & Fenwick, C. M. J. (2009). Comparison of different strongman events: trunk muscle activation and lumbar spine motion, load, and stiffness. <i>Journal of Strength and Conditioning Research</i>, 23(4), 1148–1161.',
+          '15. Milanović, Z., Sporiš, G., & Weston, M. (2015). Effectiveness of high-intensity interval training (HIT) and continuous endurance training for VO2max improvements: a systematic review and meta-analysis of controlled trials. <i>Sports Medicine</i>, 45(10), 1469–1481.',
+          '16. Murlasits, Z., Kneffel, Z., & Thalib, L. (2018). The physiological effects of concurrent strength and endurance training sequence: a systematic review and meta-analysis. <i>Journal of Sports Sciences</i>.',
+          '17. Relph, N., dkk. (2022). Running shoes for preventing lower limb running injuries in adults. <i>Cochrane Database of Systematic Reviews</i>.',
+          "18. Riebe, D., dkk. (2015). Updating ACSM's recommendations for exercise preparticipation health screening. <i>Medicine & Science in Sports & Exercise</i>, 47(11), 2473–2479.",
+          '19. Schoenfeld, B. J., Ogborn, D. I., & Krieger, J. W. (2015). Effect of repetition duration during resistance training on muscle hypertrophy: a systematic review and meta-analysis. <i>Sports Medicine</i>.',
+          '20. Schoenfeld, B. J., dkk. (2018). Differential effects of attentional focus strategies during long-term resistance training. <i>European Journal of Sport Science</i>.',
+          '21. Schumann, M., dkk. (2022). Compatibility of concurrent aerobic and strength training for skeletal muscle size and function: an updated systematic review and meta-analysis. <i>Sports Medicine</i>, 52(3), 601–612.',
+          '22. Seiler, S. (2010). What is best practice for training intensity and duration distribution in endurance athletes? <i>International Journal of Sports Physiology and Performance</i>, 5(3), 276–291.',
+          '23. Sheikhhoseini, R., dkk. (2018). Effectiveness of therapeutic exercise on forward head posture: a systematic review and meta-analysis. <i>Journal of Manipulative and Physiological Therapeutics</i>.',
+          '24. Sporer, B. C., & Wenger, H. A. (2003). Effects of aerobic exercise on strength performance following various periods of recovery. <i>Journal of Strength and Conditioning Research</i>.',
+          '25. Tan, J. G., Coburn, J. W., Brown, L. E., & Judelson, D. A. (2014). Effects of a single bout of lower-body aerobic exercise on muscle activation and performance during subsequent upper- and lower-body resistance exercise workouts. <i>Journal of Strength and Conditioning Research</i>.'
         ]
       }
     ];
@@ -3164,19 +3496,20 @@
     }
 
     // Set 0 (Warm-Up) isolated toggle handler (stored in _sw0 so _s0, _s1, _s2 never shift)
-    function toggleWarmupSet(exId, restSec) {
-      const key = `w${ST.phase}_${ST.day}_${exId}_sw0`;
+    // V4.0: set pemanasan tambahan (mis. set ramp RDL) memakai indeks berikutnya (_sw1)
+    function toggleWarmupSet(exId, restSec, wuIdx = 0) {
+      const key = `w${ST.phase}_${ST.day}_${exId}_sw${wuIdx}`;
       const nextVal = !ST.setsDone[key];
       ST.setsDone[key] = nextVal;
       saveState();
       if (nextVal && restSec > 0) {
-        startFloatingTimer(restSec, 'Transisi Set 0 -> Set 1', false);
+        startFloatingTimer(restSec, wuIdx === 0 ? 'Transisi Set 0 -> Set 1' : 'Transisi Set Ramp -> Set 1', false);
       }
       renderApp();
     }
 
-    function updateWarmupMetric(metricKey, val) {
-      const fullKey = `w${ST.phase}_${metricKey}_sw0`;
+    function updateWarmupMetric(metricKey, val, wuIdx = 0) {
+      const fullKey = `w${ST.phase}_${metricKey}_sw${wuIdx}`;
       ST.metrics[fullKey] = val;
       saveState();
     }
@@ -3190,6 +3523,14 @@
         }
       }
       return defVal;
+    }
+
+    // V4.0: checklist Rutin Pemanasan 7 Gerakan (disimpan per pekan & hari)
+    function toggleRutinItem(idx) {
+      const key = `w${ST.phase}_${ST.day}_r7_${idx}`;
+      ST.setsDone[key] = !ST.setsDone[key];
+      saveState();
+      renderApp();
     }
 
     function toggleExerciseSet(exId, setIdx, restSec) {
@@ -3462,6 +3803,38 @@
       `;
     }
 
+    function renderWarmupAccordionHtml(accId, title, steps, p, d) {
+      return `
+        <button class="acc-header" onclick="toggleAccordion('${accId}')">
+          <span>${title}</span>
+          <span style="color:var(--gold);">▼</span>
+        </button>
+        <div id="${accId}" class="acc-body open">
+          ${steps.map((w, idx) => `
+            <div style="padding:7px 0; border-bottom:${idx < steps.length - 1 ? '1px solid var(--border)' : 'none'};">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <strong style="font-size:12.5px;">${w.title}</strong>
+                <span class="badge-pill badge-gold">${w.badge}</span>
+              </div>
+              <div style="font-size:11.5px; color:var(--muted); margin-top:3px; white-space:pre-line;">${w.info}</div>${w.checklist ? `
+                <div class="r7-list">
+                  ${w.checklist.map((item, i) => {
+                    const done = Boolean(ST.setsDone[`w${p}_${d}_r7_${i}`]);
+                    return `<button class="r7-item ${done ? 'done' : ''}" onclick="toggleRutinItem(${i})"><span class="r7-mark">${done ? '✓' : (i + 1) + '.'}</span><span>${item}</span></button>`;
+                  }).join('')}
+                </div>
+              ` : ''}${w.timerSec > 0 ? `
+                <button class="btn btn-cyan" style="margin-top:6px; padding:5px 9px;"
+                  onclick="startFloatingTimer(${w.timerSec}, '${w.title.replace(/'/g, '')}', true)">
+                  ⏱️ Timer ${w.timerSec} dtk
+                </button>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
     function renderWorkoutTab() {
       const p = Number(ST.phase);
       const d = ST.day;
@@ -3673,38 +4046,24 @@
         `;
       }
 
-      // 3B. SELASA V3.0: LARI 1 DIKERJAKAN SEBELUM LOWER
+      // 3B. SELASA: LARI 1 DIKERJAKAN SEBELUM LOWER (W3+). V4.0: Rutin 7 Gerakan -> Lari 1 -> Transisi -> Lower
       const runSession = getRunSessionForDay(d, p);
       const runFirst = Boolean(runSession && d === 'tue' && isRunFirstTuesday(p));
+      const wcData = getWarmupCooldownData(d);
+      const warmupBeforeRun = Boolean(runFirst && isV4(p));
+
+      // 4. CONTEXT-AWARE WARM-UP ACCORDION (withPrep = true)
+      if (warmupBeforeRun && wcData && wcData.warmup) {
+        html += renderWarmupAccordionHtml('acc-warmup', wcData.warmupTitle, wcData.warmup, p, d);
+      }
       if (runSession && runFirst) {
         html += renderRunCardHtml(runSession, p, d);
       }
-
-      // 4. CONTEXT-AWARE WARM-UP ACCORDION (withPrep = true)
-      const wcData = getWarmupCooldownData(d);
-      if (wcData && wcData.warmup) {
-        html += `
-          <button class="acc-header" onclick="toggleAccordion('acc-warmup')">
-            <span>${wcData.warmupTitle}</span>
-            <span style="color:var(--gold);">▼</span>
-          </button>
-          <div id="acc-warmup" class="acc-body open">
-            ${wcData.warmup.map((w, idx) => `
-              <div style="padding:7px 0; border-bottom:${idx < wcData.warmup.length - 1 ? '1px solid var(--border)' : 'none'};">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                  <strong style="font-size:12.5px;">${w.title}</strong>
-                  <span class="badge-pill badge-gold">${w.badge}</span>
-                </div>
-                <div style="font-size:11.5px; color:var(--muted); margin-top:3px; white-space:pre-line;">${w.info}</div>${w.timerSec > 0 ? `
-                  <button class="btn btn-cyan" style="margin-top:6px; padding:5px 9px;"
-                    onclick="startFloatingTimer(${w.timerSec}, '${w.title.replace(/'/g, '')}', true)">
-                    ⏱️ Timer ${w.timerSec} dtk
-                  </button>
-                ` : ''}
-              </div>
-            `).join('')}
-          </div>
-        `;
+      if (!warmupBeforeRun && wcData && wcData.warmup) {
+        html += renderWarmupAccordionHtml('acc-warmup', wcData.warmupTitle, wcData.warmup, p, d);
+      }
+      if (wcData && wcData.transition && wcData.transition.length) {
+        html += renderWarmupAccordionHtml('acc-transition', wcData.transitionTitle, wcData.transition, p, d);
       }
 
       // 5. EXERCISE CARDS FOR CURRENT DAY (HEVY-STYLE PER-SET INPUTS + SET 0 WARM-UP)
@@ -3713,10 +4072,10 @@
         const dayHeaderTitle = (d === 'mon' || d === 'thu')
           ? '🧘 MODUL POSTUR & PREHAB ENGKEL 3 ARAH (±11 Menit, Kamar)'
           : (schedType.includes('upper_a')
-              ? '🏋️ GYM UPPER A (±50 Mnt) — Dada Atas, Pulldown, Bahu & Lengan'
+              ? (isV4(p) ? '🏋️ GYM UPPER A (±53 Mnt) — Dada Atas, Pulldown, Bahu & Lengan' : '🏋️ GYM UPPER A (±50 Mnt) — Dada Atas, Pulldown, Bahu & Lengan')
               : (schedType.includes('lower')
-                  ? (isV3(p) ? '🦵 GYM LOWER (±35 Mnt, Setelah Lari 1) — RDL, Betis & Carry' : '🦵 GYM 2 — LOWER (Olympic Barbell RDL, Betis & Kapasitas Angkat)')
-                  : (p >= V3_UPPER_B_START_PHASE ? '🏋️ GYM UPPER B (±48 Mnt) — Assisted Pull-Up, Punggung Tengah & Lengan' : '🏋️ GYM 3 — UPPER B (Anti-Slouch, Back Density & Forearm #2)')));
+                  ? (isV4(p) ? '🦵 GYM LOWER (±37 Mnt, Setelah Lari 1) — RDL, Betis & Suitcase Carry' : '🦵 GYM 2 — LOWER (Olympic Barbell RDL, Betis & Kapasitas Angkat)')
+                  : (isV4Day(p, 'sat') ? '🏋️ GYM UPPER B (±55 Mnt) — Assisted Pull-Up, Carry Depan & Lengan' : p >= V3_UPPER_B_START_PHASE ? '🏋️ GYM UPPER B (±48 Mnt) — Assisted Pull-Up, Punggung Tengah & Lengan' : '🏋️ GYM 3 — UPPER B (Anti-Slouch, Back Density & Forearm #2)')));
 
         html += `<div class="section-label"><span>${dayHeaderTitle}</span><span>${PHASE_NAMES[p].split(':')[0]}</span></div>`;
 
@@ -3752,34 +4111,42 @@
             `;
 
             // Render Set 0 (Warm-Up) row at the very top of .hevy-sets-wrap if defined
-            if (ex.warmupSet) {
-              const wuDoneKey = `w${p}_${d}_${ex.id}_sw0`;
+            // V4.0: set pemanasan kedua (set ramp RDL) disimpan di _sw1, tanpa mewarisi nilai pekan lalu
+            [ex.warmupSet, ex.rampSet].forEach((wu, wuIdx) => {
+              if (!wu) return;
+              const wuDoneKey = `w${p}_${d}_${ex.id}_sw${wuIdx}`;
               const isWuDone = Boolean(ST.setsDone[wuDoneKey]);
-              const wuVal0 = getWarmupMetricVal(m0.key, ex.warmupSet.defKg);
-              const wuVal1 = m1 ? getWarmupMetricVal(m1.key, ex.warmupSet.defReps) : '';
+              const storedWu = key => {
+                const v = ST.metrics[`w${p}_${key}_sw${wuIdx}`];
+                return (v !== undefined && v !== '') ? v : null;
+              };
+              const wuVal0 = wuIdx === 0 ? getWarmupMetricVal(m0.key, wu.defKg) : (storedWu(m0.key) ?? wu.defKg);
+              const wuVal1 = m1 ? (wuIdx === 0 ? getWarmupMetricVal(m1.key, wu.defReps) : (storedWu(m1.key) ?? wu.defReps)) : '';
+              const wuTag = wuIdx === 0 ? 'WU' : 'Ramp';
+              const wuArg = wuIdx === 0 ? '' : `, ${wuIdx}`;
 
               setsBlockHtml += `
                 <div class="hevy-set-row warmup-row ${isWuDone ? 'done' : ''}">
                   <button class="set-btn ${isWuDone ? 'completed' : ''}"
-                    onclick="toggleWarmupSet('${ex.id}', ${ex.warmupSet.restSec || 40})">
-                    ${isWuDone ? '✓' : '○'} Set 0 (WU)
+                    onclick="toggleWarmupSet('${ex.id}', ${wu.restSec || 40}${wuArg})">
+                    ${isWuDone ? '✓' : '○'} ${wuIdx === 0 ? 'Set 0 (WU)' : 'Set 0 Ramp'}
                   </button>
                   <div class="hevy-input-box">
-                    <span>WU ${m0.label}</span>
+                    <span>${wuTag} ${m0.label}</span>
                     <input type="number" step="0.5" value="${wuVal0}"
-                      onchange="updateWarmupMetric('${m0.key}', this.value)" />
+                      onchange="updateWarmupMetric('${m0.key}', this.value${wuArg})" />
                   </div>
                   ${m1 ? `
                     <div class="hevy-input-box">
-                      <span>WU ${m1.label}</span>
+                      <span>${wuTag} ${m1.label}</span>
                       <input type="number" step="0.5" value="${wuVal1}"
-                        onchange="updateWarmupMetric('${m1.key}', this.value)" />
+                        onchange="updateWarmupMetric('${m1.key}', this.value${wuArg})" />
                     </div>
                   ` : `<div></div>`}
-                  <div class="hevy-warmup-note">${ex.warmupSet.note}</div>
+                  <div class="hevy-warmup-note">${wu.note}</div>
                 </div>
               `;
-            }
+            });
 
             // Render Working Sets (Set 1, Set 2, Set 3 -> stored at _s0, _s1, _s2)
             for (let s = 0; s < effSets; s++) {
@@ -3856,7 +4223,7 @@
               <div class="card-header">
                 <div class="card-title">${ex.title}</div>
                 <span class="badge-pill ${ex.compound ? 'badge-gold' : 'badge-cyan'}">
-                  ${ex.setsLabel || `${ex.warmupSet ? 'WU + ' : ''}${effSets} Set`}
+                  ${ex.setsLabel || `${ex.warmupSet ? 'WU + ' : ''}${effSets} ${ex.unitLabel || 'Set'}`}
                 </span>
               </div>
 
@@ -4080,6 +4447,15 @@
         }
         return null;
       })();
+      const firstStored = key => {
+        for (let w = 0; w <= MAX_PHASE; w++) {
+          const v = getStoredMetric(w, key);
+          if (v !== null) return { w, v };
+        }
+        return null;
+      };
+      const sucFirst = firstStored('suc_kg_s0');
+      const bhcFirst = firstStored('bhc_kg_s0');
       const apuPinNow = getSetMetricVal('apu2_kg', 0, getSetMetricVal('apu_kg', 0, 22.5));
       const apuRepNow = getSetMetricVal('apu2_reps', 0, getSetMetricVal('apu_reps', 0, 8));
 
@@ -4389,6 +4765,18 @@
                   <td>45–60 dtk</td>
                 </tr>
                 <tr>
+                  <td><b>Suitcase Carry</b></td>
+                  <td>${sucFirst ? `${sucFirst.v} kg (W${sucFirst.w})` : 'Dicatat di sesi pertama'}</td>
+                  <td>${sucFirst ? `${getSetMetricVal('suc_kg', 0, '—')} kg/tangan × ${getSetMetricVal('suc_steps', 0, 30)} langkah/sisi` : '—'}</td>
+                  <td>20 kg/tangan × 35 langkah/sisi; bonus 22,5 kg</td>
+                </tr>
+                <tr>
+                  <td><b>Plate Bear-Hug Carry</b></td>
+                  <td>${bhcFirst ? `Plate ${bhcFirst.v} kg (W${bhcFirst.w})` : 'Dicatat di sesi pertama'}</td>
+                  <td>${bhcFirst ? `Plate ${getSetMetricVal('bhc_kg', 0, '—')} kg × ${getSetMetricVal('bhc_steps', 0, 30)} langkah` : '—'}</td>
+                  <td>Plate 20 kg × 40 langkah</td>
+                </tr>
+                <tr>
                   <td><b>Negative Pull-Up (Gerbang)</b></td>
                   <td>Ditunda</td>
                   <td>${negGate.open ? (negLogged ? `✅ Lolos · ${getSetMetricValAt(MAX_PHASE, 'neg_reps', 0, 2)} rep (${getSetMetricValAt(MAX_PHASE, 'neg_sec', 0, 4)} dtk)` : '✅ Lolos gerbang') : `🔒 Belum lolos (${negGate.streak}/2 sesi)`}</td>
@@ -4458,7 +4846,7 @@
       const dataStr = JSON.stringify(ST, null, 2);
       if (navigator.clipboard) {
         navigator.clipboard.writeText(dataStr).then(() => {
-          alert('✅ Data JSON AEROFRAME V3.0 berhasil disalin ke Clipboard!');
+          alert('✅ Data JSON AEROFRAME V4.0 berhasil disalin ke Clipboard!');
         }).catch(() => {});
       }
       const box = document.getElementById('json-io-box');
@@ -4471,7 +4859,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `aeroframe_v30_backup_W${ST.phase}.json`;
+      a.download = `aeroframe_v40_backup_W${ST.phase}.json`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -4552,7 +4940,7 @@
     function renderInsightTab() {
       let html = `
         <div class="section-label">
-          <span>📖 MODUL PANDUAN BLUEPRINT AEROFRAME V3.0</span>
+          <span>📖 MODUL PANDUAN BLUEPRINT AEROFRAME V4.0</span>
         </div>
       `;
       INSIGHT_MODULES.forEach((mod, idx) => {
